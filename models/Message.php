@@ -337,4 +337,28 @@ class Message extends ActiveRecord
     {
         return (($this->originator->id == Yii::$app->user->id) || Yii::$app->user->isAdmin() || $this->isModerator(Yii::$app->user->id));
     }
+
+    /**
+     * @param $userId1
+     * @param $userId2
+     * @return Message|null
+     */
+    public static function findPrivateByUserIds($userId1, $userId2): ?Message
+    {
+        $myMessages = (new yii\db\Query())->select('message_id')->from('user_message')->where(['=','user_id', $userId1]);
+        $theirMessages = (new yii\db\Query())->select('message_id')->from('user_message')->where(['=','user_id', $userId2]);
+        $countMembers = (new yii\db\Query())->select(['message_id', 'cnt'=>'count(*)'])->from('user_message')->groupBy("message_id");
+        $privateChats = (new yii\db\Query())->select('message_id')->from($countMembers)->where(['=', 'cnt', 2]);
+
+        /** @var Message|null $message */
+        $message = Message::find()
+            -> leftJoin("user_message","user_message.message_id=message.id")
+            -> where(["in", "message.id", $myMessages])
+            -> andWhere(["in", "message.id", $theirMessages])
+            -> andWhere(["in", "message.id", $privateChats])
+            -> orderBy("updated_at desc")
+            -> one();
+
+        return $message;
+    }
 }
