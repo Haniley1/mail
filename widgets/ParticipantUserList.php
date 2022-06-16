@@ -50,7 +50,7 @@ class ParticipantUserList extends Widget
             $result = Html::beginTag('a', ['href' => $targetUser->getUrl()]);
             $result .= Html::beginTag('div', $this->getPersonalTitleOptions($targetUser));
             $result .= Html::beginTag('span');
-            $result .= $targetUser->displayName;
+            $result .= $targetUser->displayName . \humhub\modules\musztabel\widgets\UserPlan::widget(['model' => $targetUser]);
             $result .= Html::endTag('span');
             $result .= Html::endTag('div');
             //$result .= Html::beginTag('div', $this->targetStatusStyle);
