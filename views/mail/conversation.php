@@ -26,7 +26,7 @@ $countUsers = count($message->users);
     <div class="mail-conversation">
         <div class="header" id="mail-conversation-header">
             <div class="mail-mobile-control hidden-from-desktop">
-                <div class="control-btn" id="mail-breadcrumbs" data-ui-widget="mail.mobile.MailBreadcrumbs" data-action-click="mail.mobile.closeConversation">
+                <div class="control-btn" id="mail-breadcrumbs" data-ui-widget="mail.mobile.MailBreadcrumbs" data-action-click="mail.mobile.closeConversationMobile">
                     <a href="#" class="icon"><svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 13L1 7L7 1" fill="#F4F4F4"/><path d="M7 13L1 7L7 1" stroke="#B4B4B4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
                 </div>
             </div>
