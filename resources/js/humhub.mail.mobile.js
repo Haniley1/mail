@@ -7,7 +7,7 @@ humhub.module('mail.mobile', function (module, require, $) {
 
     var MailBreadcrumbs = Widget.extend();
 
-    var closeConversation = function(evt) {
+    var closeConversation = function (evt) {
         if (evt) {
             evt.preventDefault();
         }
@@ -15,11 +15,15 @@ humhub.module('mail.mobile', function (module, require, $) {
         MailBreadcrumbs.prototype.hideBackButton();
     }
 
-    MailBreadcrumbs.prototype.getButton = function() {
+    var closeConversationMobile = function (evt) {
+        Widget.instance('#mail-conversation-root').close(evt);
+    }
+
+    MailBreadcrumbs.prototype.getButton = function () {
         return $(this.anchor);
     };
 
-    MailBreadcrumbs.prototype.hideBackButton = function() {
+    MailBreadcrumbs.prototype.hideBackButton = function () {
         this.getButton().hide();
     };
 
@@ -64,6 +68,7 @@ humhub.module('mail.mobile', function (module, require, $) {
     module.export({
         init: init,
         MailBreadcrumbs: MailBreadcrumbs,
-        closeConversation: closeConversation
+        closeConversation: closeConversation,
+        closeConversationMobile: closeConversationMobile
     });
 });

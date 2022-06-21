@@ -19,7 +19,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
             that.updateSize(true);
         };
 
-        if (!view.isSmall()) {
+        if (!view.isSmall() && !view.isMedium()) {
             this.reload();
         }
 
@@ -76,7 +76,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
                         richtext.$.trigger('clear');
                     }
                     that.scrollToBottom();
-                    if(!view.isSmall()) { // prevent autofocus on mobile
+                    if(!view.isSmall() && !view.isMedium()) { // prevent autofocus on mobile
                         that.focus();
                     }
                     Widget.instance('#inbox').updateEntries([that.getActiveMessageId()]);
@@ -103,7 +103,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
 
 
     ConversationView.prototype.focus = function (evt) {
-        if (view.isSmall()) {
+        if (view.isSmall() || view.isMedium()) {
             return Promise.resolve();
         }
         var replyRichtext = this.getReplyRichtext();
@@ -165,7 +165,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
     };
 
     ConversationView.prototype.loadMessage = function (evt) {
-        view.isSmall() && $('.messages').addClass('shown');
+        (view.isSmall() || view.isMedium()) && $('.messages').addClass('shown');
         var messageId = object.isNumber(evt) ? evt : evt.$trigger.data('message-id');
         var that = this;
         this.loader();
@@ -399,7 +399,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
                 $entryContainer.css('margin-bottom' , formHeight + 5 + 'px');
 
                 var offsetTop = that.$.find('.conversation-entry-list').offset().top;
-                var max_height = (window.innerHeight - offsetTop - formHeight - (view.isSmall() ? 20 : 30)) + 'px';
+                var max_height = (window.innerHeight - offsetTop - formHeight - ((view.isSmall() || view.isMedium()) ? 20 : 30)) + 'px';
                 $entryContainer.css('height', max_height);
                 $entryContainer.css('max-height', max_height);
 
@@ -434,16 +434,17 @@ humhub.module('mail.ConversationView', function (module, require, $) {
 
     ConversationView.prototype.close = function () {
         this.setActiveMessageId(null);
+        Widget.instance('#inbox').updateActiveItem();
         this.$.html('');
         removeIdFromUrl();
 
-        if (view.isSmall()) {  // is mobile
+        if (view.isSmall() || view.isMedium()) {  // is mobile
             mailMobile.closeConversation();
         }
     }
 
     ConversationView.prototype.detectOpenedDialog = function() {
-        if (view.isSmall()) {
+        if (view.isSmall() || view.isMedium()) {
             const queryParams = new URLSearchParams(window.location.search)
             if (queryParams.has('id')) {
                 const dialogId = queryParams.get('id')
