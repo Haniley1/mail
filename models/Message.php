@@ -428,4 +428,24 @@ class Message extends ActiveRecord
 
         return $message;
     }
+
+    public function removeRecipient($recipientId): bool
+    {
+        $userMessage = UserMessage::findOne([
+            'message_id' => $this->id,
+            'user_id' => $recipientId,
+        ]);
+        if (!$userMessage) {
+            return false;
+        }
+
+        try {
+            $userMessage->delete();
+        } catch (\Throwable $e) {
+            return false;
+        }
+
+        return true;
+
+    }
 }

@@ -70,4 +70,12 @@ return [
     'You don\'t have any new chats' => 'Сейчас у вас нет новых чатов',
     'By participants' => 'По собеседнику',
     'By tags' => 'По меткам',
+    'Find' => 'Найти',
+    'Clear' => 'Очистить',
+    'Remove from chat' => 'Удалить из чата',
+    'Are you sure you want to remove user <strong>{username}</strong> from the chat?' => 'Вы действительно хотите удалить пользователя <strong>{username}</strong> из чата?',
+    'Confirm removal of the user from the chat' => 'Подтвердите удаление пользователя из чата',
+    'Remove' => 'Удалить',
+    'Cancel' => 'Отменить',
+    'An error occurred while deleting' => 'При удалении произошла ошибка',
 ];
