@@ -1385,7 +1385,6 @@ humhub.module('mail.UserList', function(module, require, $) {
     }
 
     const remove = function (evt) {
-        console.log(evt.params.userId, evt.params.conversationId);
         client
             .get(module.config['removeParticipantUrl'] + `?id=${evt.params.conversationId}&userId=${evt.params.userId}`)
             .then(() => {filter()});
