@@ -30,7 +30,9 @@ class ConversationTagPicker extends BasePicker
 
     public function init()
     {
-        $this->defaultResults = MessageTag::findByUser(Yii::$app->user->id)->all();
+        if (Yii::$app->user->id) {
+            $this->defaultResults = MessageTag::findByUser(Yii::$app->user->id)->all();
+        }
     }
 
     /**
