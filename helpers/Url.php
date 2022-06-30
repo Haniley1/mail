@@ -130,7 +130,7 @@ class Url extends \yii\helpers\Url
 
     public static function toInboxLoadMore()
     {
-        return static::to(['/rocketmailfilter/inbox/load-more']);
+        return static::to(['/mail/inbox/load-more']);
     }
 
     public static function toInboxUpdateEntries()
@@ -146,5 +146,20 @@ class Url extends \yii\helpers\Url
     public static function toMessageUnseen()
     {
         return static::to(['/mail/mail/unseen']);
+    }
+
+    public static function toRemoveParticipant()
+    {
+        return static::to(['/mail/mail/remove-participant']);
+    }
+
+    public static function toUserList($id = null)
+    {
+        $url = '/mail/mail/user-list';
+        if ($id) {
+            $url .= "?id={$id}";
+        }
+
+        return static::to([$url]);
     }
 }

@@ -7,12 +7,12 @@ namespace humhub\modules\mail\models\forms;
 use humhub\modules\mail\models\Message;
 use humhub\modules\mail\models\MessageEntry;
 use humhub\modules\mail\models\UserMessage;
-use humhub\modules\mail\models\MessageTag;
 use humhub\modules\mail\models\UserMessageTag;
 use humhub\modules\mail\Module;
 use humhub\modules\ui\filter\models\QueryFilter;
 use Yii;
 use yii\base\InvalidCallException;
+use yii\db\ActiveQuery;
 use yii\db\conditions\ExistsCondition;
 use yii\db\conditions\LikeCondition;
 use yii\db\conditions\OrCondition;
@@ -62,6 +62,11 @@ class InboxFilterForm extends QueryFilter
     protected $wasLastPage;
 
     /**
+     * @var bool
+     */
+    public $unread = 0;
+
+    /**
      * @inheritDoc
      */
     public function rules()
@@ -72,6 +77,7 @@ class InboxFilterForm extends QueryFilter
             [['tags'], 'safe'],
             [['from'], 'integer'],
             [['ids'], 'integer'],
+            [['unread'], 'integer']
         ];
     }
 
@@ -130,6 +136,10 @@ class InboxFilterForm extends QueryFilter
         if(!empty($this->ids)) {
             $this->query->andWhere(['IN', 'user_message.message_id', $this->ids]);
         }
+
+        if ($this->unread) {
+            $this->applyUnreadFilter($this->query);
+        }
     }
 
     private function createTermLikeCondition($column)
@@ -162,5 +172,16 @@ class InboxFilterForm extends QueryFilter
     public function formName()
     {
         return '';
+    }
+
+    /**
+     * Applies new messages condition to the query provided.
+     *
+     * @param ActiveQuery $query
+     */
+    public function applyUnreadFilter(ActiveQuery $query)
+    {
+        $query->andWhere("message.updated_at > user_message.last_viewed OR user_message.last_viewed IS NULL")
+            ->andWhere(["<>", 'message.updated_by', Yii::$app->user->id]);
     }
 }

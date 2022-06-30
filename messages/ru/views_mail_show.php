@@ -14,4 +14,5 @@ return [
     'Leave' => 'Выйти',
     'Leave conversation' => 'Удалить чат',
     'There are no messages yet.' => 'Здесь пока нет сообщений.',
+    'You are not allowed to participate in this conversation. You have been blocked by: {userNames}.' => 'Вы не можете отправлять сообщения в данный чат, вы заблоикрованы у: {userNames}.',
 ];

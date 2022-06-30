@@ -210,41 +210,30 @@ humhub.module('mail.inbox', function (module, require, $) {
     };
 
     ConversationList.prototype.hide = function() {
+        var inboxWrapper = $('.inbox-wrapper');
         return new Promise(function (resolve) {
-            if(view.isSmall()) {
-                $('.inbox-wrapper').slideUp(function() {
-                    if($('#mail-conversation-root').length) {
-                        Widget.instance('#mail-conversation-root').updateSize();
-                    }
-                    resolve();
-                });
+            if (view.isSmall() && inboxWrapper.length) {
+                if($('#mail-conversation-root').length) {
+                    Widget.instance('#mail-conversation-root').updateSize();
+                }
             }
             resolve();
         });
     };
 
     ConversationList.prototype.show = function() {
+        var inboxWrapper = $('.inbox-wrapper');
         return new Promise(function (resolve) {
-            if(view.isSmall()) {
-                $('.inbox-wrapper').slideDown(function() {
-                    if($('#mail-conversation-root').length) {
-                        Widget.instance('#mail-conversation-root').updateSize();
-                    }
-
-                    resolve();
-                });
+            if (view.isSmall() && inboxWrapper.length) {
+                if($('#mail-conversation-root').length) {
+                    Widget.instance('#mail-conversation-root').updateSize();
+                }
             }
             resolve();
         });
     };
 
-    var toggleInbox = function() {
-        if(view.isSmall()) {
-            $('.inbox-wrapper').slideToggle(function() {
-                Widget.instance('#mail-conversation-root').updateSize();
-            });
-        }
-    };
+    var toggleInbox = function() {};
 
     var setTagFilter = function (evt) {
         Widget.instance('#inbox').show().then(function() {

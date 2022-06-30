@@ -36,6 +36,7 @@ return [
     'Receive Notifications when someone opens a new conversation.' => 'Primajte obavijesti kad netko otvori novi razgovor.',
     'Receive Notifications when someone sends you a message.' => 'Primajte obavijesti kad vam netko pošalje poruku.',
     'Receive private messages' => 'Primi privatne poruke',
+    'Reply' => '',
     'Search' => 'Pretraži',
     'Seperate restrictions for new users' => 'Odvojena ograničenja za nove korisnike',
     'Show menu item in top Navigation' => 'Prikaži stavku izbornika u gornjem dijelu Navigacije',

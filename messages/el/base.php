@@ -3,6 +3,7 @@
 return [
     'Edit' => 'Επεξεργασία',
     'Message' => 'Μήνυμα',
+    'Reply' => '',
     'Search' => 'Αναζήτηση',
     'Subject' => 'Θέμα',
     'Tags' => 'Λέξεις κλειδιά',
@@ -43,6 +44,7 @@ return [
     'Receive private messages' => '',
     'Seperate restrictions for new users' => '',
     'Show menu item in top Navigation' => '',
+    'Show unread only' => '',
     'Start new conversations' => '',
     'This user is already participating in this conversation.' => '',
     'Until a user is member since (days)' => '',

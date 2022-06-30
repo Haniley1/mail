@@ -36,6 +36,7 @@ return [
     'Receive Notifications when someone opens a new conversation.' => 'Otrzymywanie powiadomień kiedy ktoś rozpocznie nową rozmowę',
     'Receive Notifications when someone sends you a message.' => 'Otrzymywanie powiadomień kiedy ktoś wyśle Ci wiadomość',
     'Receive private messages' => 'Otrzymywanie prywatnych wiadomości',
+    'Reply' => '',
     'Search' => 'Szukaj',
     'Seperate restrictions for new users' => 'Oddzielne ograniczenia dla nowych użytkowników',
     'Show menu item in top Navigation' => 'Pokaż pozycję w górnym menu nawigacyjnym',

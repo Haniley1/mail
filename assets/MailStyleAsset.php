@@ -22,5 +22,6 @@ class MailStyleAsset extends AssetBundle
     ];
 
     public $css = [
+        'humhub.mail.min.css'
     ];
 }

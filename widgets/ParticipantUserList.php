@@ -3,12 +3,11 @@
 namespace humhub\modules\mail\widgets;
 
 use humhub\components\Widget;
-use humhub\libs\Helpers;
 use humhub\libs\Html;
 use humhub\modules\mail\helpers\Url;
 use humhub\modules\mail\models\Message;
-use humhub\modules\user\models\User;
-use humhub\modules\user\widgets\Image;use Yii;
+use humhub\modules\musztabel\widgets\UserPlan;
+use Yii;
 
 class ParticipantUserList extends Widget
 {
@@ -50,7 +49,7 @@ class ParticipantUserList extends Widget
             $result = Html::beginTag('a', ['href' => $targetUser->getUrl()]);
             $result .= Html::beginTag('div', $this->getPersonalTitleOptions($targetUser));
             $result .= Html::beginTag('span');
-            $result .= $targetUser->displayName . \humhub\modules\musztabel\widgets\UserPlan::widget(['model' => $targetUser]);
+            $result .= $targetUser->displayName . UserPlan::widget(['model' => $targetUser]);
             $result .= Html::endTag('span');
             $result .= Html::endTag('div');
             //$result .= Html::beginTag('div', $this->targetStatusStyle);

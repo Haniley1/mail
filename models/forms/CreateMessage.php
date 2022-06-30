@@ -182,7 +182,7 @@ class CreateMessage extends Model
     {
         $entry = MessageEntry::createForMessage($this->messageInstance, Yii::$app->user->getIdentity(), $this->message);
         $result = $entry->save();
-        $entry->notify();
+        $entry->notify(true);
         return $result;
     }
 

@@ -20,9 +20,8 @@
   "devDependencies": {
     "grunt": "^1.1.0",
     "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-uglify": "^5.0",
     "grunt-contrib-cssmin": "^3.0.0",
-    "grunt-contrib-watch": "^1.1.0",
-    "terser": "^5.13.0",
-    "grunt-terser": "^2.0.0"
+    "grunt-contrib-watch": "^1.1.0"
   }
 }

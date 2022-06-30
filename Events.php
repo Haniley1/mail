@@ -182,7 +182,7 @@ class Events
                 return;
             }
 
-            $event->sender->addWidget(NewMessageButton::class, ['guid' => $event->sender->user->guid, 'size' => null, 'icon' => null], ['sortOrder' => 90]);
+            $event->sender->addWidget(NewMessageButton::class, ['guid' => $event->sender->user->guid, 'size' => null, 'icon' => null, 'cssClass' => 'btn-secondary'], ['sortOrder' => 90]);
         } catch (\Throwable $e) {
             Yii::error($e);
         }

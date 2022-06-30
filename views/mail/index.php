@@ -11,14 +11,18 @@ MailMessengerAsset::register($this);
 
 ?>
 
-<div class="container">
+<div class="page-mail">
     <div class="row">
-        <div class="col-md-4">
-            <?= $this->render('_conversation_sidebar') ?>
+        <div class="col-xs-12 col-lg-4 col-flex-xs">
+            <div class="flex-grow-xs">
+                <?= $this->render('_conversation_sidebar') ?>
+            </div>
         </div>
 
-        <div class="col-md-8 messages">
-            <?= ConversationView::widget(['messageId' => $messageId]) ?>
+        <div class="col-xs-12 col-lg-8 col-flex-xs messages">
+            <div class="flex-grow-xs">
+                <?= ConversationView::widget(['messageId' => $messageId]) ?>
+            </div>
         </div>
     </div>
 </div>

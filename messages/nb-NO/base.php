@@ -23,6 +23,7 @@ return [
     'Receive Notifications when someone opens a new conversation.' => 'Motta varsel når noen starter en ny samtale.',
     'Receive Notifications when someone sends you a message.' => 'Motta varsel når noen sender deg en melding.',
     'Receive private messages' => 'Motta private meldinger',
+    'Reply' => '',
     'Search' => 'Søk',
     'Seperate restrictions for new users' => 'Egne begrensninger for nye brukere',
     'Show menu item in top Navigation' => 'Vis menyvalg i toppnavigasjonen',

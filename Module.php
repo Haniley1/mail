@@ -2,8 +2,8 @@
 
 namespace humhub\modules\mail;
 
-use humhub\modules\mail\notifications\MailNotificationDummy;
-use humhub\modules\mail\notifications\MailNotificationDummy2;
+use humhub\modules\mail\notifications\MailNotification;
+use humhub\modules\mail\notifications\ConversationNotification;
 use humhub\modules\mail\permissions\StartConversation;
 use humhub\modules\mail\permissions\SendMail;
 use humhub\modules\user\models\User;
@@ -81,8 +81,8 @@ class Module extends \humhub\components\Module
     public function getNotifications()
     {
         return [
-            MailNotificationDummy::class,
-            MailNotificationDummy2::class
+            MailNotification::class,
+            ConversationNotification::class
         ];
     }
 

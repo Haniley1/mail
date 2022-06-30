@@ -14,15 +14,17 @@ use yii\bootstrap\ActiveForm;
 
 ?>
 
-<?php ModalDialog::begin(['header' => Yii::t('MailModule.base', 'Edit conversation title')]) ?>
-<?php $form = ActiveForm::begin() ?>
+<?php ModalDialog::begin(['header' => Yii::t('MailModule.base', 'Edit conversation title'), 'size' => 'large']) ?>
+
+    <?php $form = ActiveForm::begin() ?>
     <div class="modal-body">
         <?= $form->field($model, 'title')->textInput()->label(false) ?>
     </div>
     <div class="modal-footer">
-        <?= ModalButton::save(Yii::t('base', 'Save'))->submit()?>
-
-        <?= ModalButton::cancel() ?>
+        <?= ModalButton::save(Yii::t('base', 'Save'))->submit()->cssClass('btn-primary')?>
+        <?= ModalButton::cancel()->cssClass('btn-secondary')?>
     </div>
-<?php ActiveForm::end() ?>
+    <?php ActiveForm::end() ?>
+
 <?php ModalDialog::end() ?>
+

@@ -2,6 +2,7 @@
 
 return [
     'Edit' => 'עריכה',
+    'Reply' => '',
     'Search' => 'חיפוש',
     '+ Message' => '',
     '<strong>Confirm</strong> tag deletion' => '',
@@ -39,6 +40,7 @@ return [
     'Receive private messages' => '',
     'Seperate restrictions for new users' => '',
     'Show menu item in top Navigation' => '',
+    'Show unread only' => '',
     'Start new conversations' => '',
     'Subject' => '',
     'Tags' => '',

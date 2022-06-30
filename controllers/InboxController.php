@@ -6,7 +6,7 @@ use humhub\components\access\ControllerAccess;
 use humhub\components\Controller;
 use humhub\modules\mail\widgets\ConversationInbox;
 use humhub\modules\mail\widgets\InboxMessagePreview;
-use humhub\modules\rocketmailfilter\models\forms\InboxFilterForm;
+use humhub\modules\mail\models\forms\InboxFilterForm;
 use Yii;
 
 /**

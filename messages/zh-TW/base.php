@@ -2,6 +2,7 @@
 
 return [
     'Message' => '訊息',
+    'Reply' => '',
     'Search' => '搜尋',
     'Title' => '標題',
     '+ Message' => '',
@@ -40,6 +41,7 @@ return [
     'Receive private messages' => '',
     'Seperate restrictions for new users' => '',
     'Show menu item in top Navigation' => '',
+    'Show unread only' => '',
     'Start new conversations' => '',
     'Subject' => '',
     'Tags' => '',

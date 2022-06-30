@@ -2,6 +2,7 @@
 
 use humhub\libs\Html;
 use humhub\modules\mail\widgets\ConversationSettingsMenu;
+use humhub\modules\mail\widgets\ParticipantImages;
 use humhub\modules\mail\widgets\ParticipantUserList;
 use humhub\modules\user\widgets\Image;
 use humhub\widgets\ModalButton;
@@ -13,50 +14,29 @@ use humhub\modules\mail\helpers\Url;
 $maxUserImageEntries = 3;
 
 $users = $message->users;
-$userCount = count($users);
-
-// We only display the show more button if we have more than one overlapping user
-$maxUserImages = ($userCount === $maxUserImageEntries) ? $maxUserImageEntries : $maxUserImageEntries - 1;
-
-
-$userList = '';
+$participantsCount = count($users);
 ?>
 
-<strong>
-<?= Html::encode($message->title) ?>
-</strong>
-<br>
-<div class="pull-right">
-    <?php if (!empty($users)) : ?>
+<?= ParticipantImages::widget([
+    'message' => $message,
+    'maxImageEntries' => $maxUserImageEntries,
+    'imagesGroupStyle' => ['class' => 'mail-avatars'],
+    'firstImageStyle' => ['class' => 'mail-avatar-first'],
+    'firstImageStyleDisabled' => ['class' => 'mail-avatar-first profile-disable'],
+    'imagesStyle' => ['class' => 'mail-avatar-other'],
+    'imagesStyleDisabled' => ['class' => 'mail-avatar-other profile-disable'],
+    'oneImageStyle' => ['class' => 'avatar'],
+    'oneImageStyleDisabled' => ['class' => 'avatar profile-disable'],
+]); ?>
 
-        <?php foreach ($users as $index => $user) : ?>
-            <?php if ($index < $maxUserImages) : ?>
-                <?= Image::widget(['user' => $user, 'width' => '25', 'showTooltip' => true, 'link' => true, 'linkOptions' => ['class' => 'hidden-xs']]) ?>
-            <?php else: ?>
-                <?php $userList .= Html::encode($user->getDisplayName()) ?>
-                <?php $userList .= ($index < $userCount - 1) ? '<br>' : '' ?>
-            <?php endif ?>
-        <?php endforeach; ?>
-
-        <?php if ($userCount > $maxUserImageEntries) : ?>
-            <?= ModalButton::defaultType('+' . (count($message->users) - $maxUserImages))
-                ->load(Url::toConversationUserList($message))
-                ->cssClass('conversation-head-button')
-                ->tooltip($userList)
-                ->cssClass('hidden-xs')
-                ->options(['data-html' => 'true', 'data-placement' => 'bottom'])
-                ->sm()->loader(false) ?>
-        <?php endif; ?>
-
-        <?= ConversationSettingsMenu::widget(['message' => $message]) ?>
-    <?php endif; ?>
+<div class="mail-info">
+    <?= ParticipantUserList::widget([
+        'message' => $message,
+        'participantsCounterStyle' => ['class' => 'mail-info-participants'],
+        'targetStatusStyle' => ['class' => 'mail-info-participants hidden-from-desktop'],
+    ]); ?>
 </div>
 
-<div id="conversation-head-info">
-    <small>
-        <?php $link = Html::beginTag('strong') . Html::containerLink($message->originator, ['style' => ['color' => $this->theme->variable('info')]]) . Html::endTag('strong'); ?>
-        <?= Yii::t('MailModule.base', 'created by {name}', ['name' => $link]) ?>
-
-        <?= ParticipantUserList::widget(['message' => $message, 'options' => ['class' => 'visible-xs-inline']]) ?>
-    </small>
-</div>
+<?php if (!empty($users)) : ?>
+    <?= ConversationSettingsMenu::widget(['message' => $message]) ?>
+<?php endif; ?>

@@ -1,8 +1,8 @@
 <?php
 
 use humhub\libs\Html;
-use humhub\modules\content\widgets\richtext\RichTextField;
 use humhub\modules\mail\models\forms\ReplyForm;
+use humhub\modules\mail\models\Message;
 use humhub\modules\mail\widgets\ConversationHeader;
 use humhub\modules\mail\widgets\ConversationTags;
 use humhub\modules\mail\widgets\MailRichtextEditor;
@@ -14,47 +14,62 @@ use humhub\widgets\Button;
 /* @var $this View */
 /* @var $replyForm ReplyForm */
 /* @var $messageCount integer */
+/* @var $message Message */
+/* @var $hasDeactivated bool */
 
+$countUsers = count($message->users);
 ?>
-<div class="panel panel-default">
 
-    <?php if ($message === null) : ?>
+<?php if ($message === null) : ?>
 
-        <div class="panel-body">
-            <?= Yii::t('MailModule.views_mail_show', 'There are no messages yet.'); ?>
-        </div>
-
-    <?php  else :?>
-
-        <div id="mail-conversation-header" class="panel-heading" style="background-color:<?= $this->theme->variable('background-color-secondary')?>">
-             <?= ConversationHeader::widget(['message' => $message]) ?>
+<?php else :?>
+    <div class="mail-conversation">
+        <div class="header" id="mail-conversation-header">
+            <div class="mail-mobile-control hidden-from-desktop">
+                <div class="control-btn" id="mail-breadcrumbs" data-ui-widget="mail.mobile.MailBreadcrumbs" data-action-click="mail.mobile.closeConversationMobile">
+                    <a href="#" class="icon"><svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 13L1 7L7 1" fill="#F4F4F4"/><path d="M7 13L1 7L7 1" stroke="#B4B4B4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </div>
+            <?= ConversationHeader::widget(['message' => $message]) ?>
         </div>
 
         <?= ConversationTags::widget(['message' => $message])?>
 
-        <div class="panel-body">
-
+        <div class="content">
             <div class="media-list conversation-entry-list">
                 <?= Messages::widget(['message' => $message])?>
             </div>
-
+        </div>
+        <div class="mail-editor">
+            <?php if ($message->isBlocked()) : ?>
+                <div class="alert alert-danger">
+                    <?= Yii::t('MailModule.views_mail_show', 'You are not allowed to participate in this conversation. You have been blocked by: {userNames}.', [
+                        'userNames' => implode(', ', $message->getBlockerNames())
+                    ]); ?>
+                </div>
+            <?php elseif ($countUsers === 2 && $hasDeactivated) : ?>
+                <?php $form = ActiveForm::begin(['enableClientValidation' => false]); ?>
+                    <div class="form-textarea">
+                        <?= $form->field($replyForm, 'message')->widget(MailRichtextEditor::class, ['id' => 'reply-'.time(), 'disabled' => true])->label(false) ?>
+                    </div>
+                    <div class="form-button">
+                        <?= Button::defaultType(Yii::t('custom', '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.4066 5.59967L7.31915 10.7415L1.53283 7.12238C0.703778 6.60368 0.876236 5.34439 1.81397 5.07016L15.5522 1.0469C16.4109 0.795226 17.2067 1.59807 16.9516 2.45955L12.8872 16.1882C12.6087 17.1273 11.3566 17.2951 10.8428 16.4625L7.31645 10.7424" stroke="#B4B4B4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="stroke: #B4B4B4 !important;"/></svg>'))->cssClass('reply-button')->right()->sm()->cssClass('disabled')->loader(false) ?>
+                    </div>
+                <?php ActiveForm::end(); ?>
+            <?php else : ?>
+                <?php $form = ActiveForm::begin(['enableClientValidation' => false]); ?>
+                    <div class="form-textarea">
+                        <?= $form->field($replyForm, 'message')->widget(MailRichtextEditor::class, ['id' => 'reply-'.time()])->label(false) ?>
+                    </div>
+                    <div class="form-button">
+                        <?= Button::defaultType(Yii::t('custom', '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.4066 5.59967L7.31915 10.7415L1.53283 7.12238C0.703778 6.60368 0.876236 5.34439 1.81397 5.07016L15.5522 1.0469C16.4109 0.795226 17.2067 1.59807 16.9516 2.45955L12.8872 16.1882C12.6087 17.1273 11.3566 17.2951 10.8428 16.4625L7.31645 10.7424" stroke="#F9754F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'))->cssClass('reply-button')->submit()->action('reply', $replyForm->getUrl())->right()->sm() ?>
+                    </div>
+                <?php ActiveForm::end(); ?>
+            <?php endif; ?>
         </div>
 
-        <div class="mail-message-form">
-            <?php $form = ActiveForm::begin(['enableClientValidation' => false]); ?>
-
-            <?= $form->field($replyForm, 'message')->widget(MailRichtextEditor::class, ['id' => 'reply-'.time()])->label(false) ?>
-
-            <div class="clearfix">
-                <?= Button::defaultType()->cssClass('reply-button')->submit()->action('reply', $replyForm->getUrl())->right()->icon('paper-plane-o')->sm() ?>
-            </div>
-
-
-            <?php ActiveForm::end(); ?>
-        </div>
-    <?php endif; ?>
-
-    <script <?= Html::nonce() ?>>
-        humhub.modules.mail.notification.setMailMessageCount(<?= $messageCount ?>);
-    </script>
-</div>
+        <script <?= Html::nonce() ?>>
+            humhub.modules.mail.notification.setMailMessageCount(<?= $messageCount ?>);
+        </script>
+    </div>
+<?php endif; ?>

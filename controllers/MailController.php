@@ -4,11 +4,13 @@ namespace humhub\modules\mail\controllers;
 
 use humhub\components\access\ControllerAccess;
 use humhub\modules\mail\models\forms\EditTitle;
+use humhub\modules\mail\models\forms\UserFilter as MailUserFilter;
 use humhub\modules\mail\Module;
+use humhub\modules\mail\widgets\ChatUserList;
 use humhub\modules\mail\widgets\ConversationHeader;
 use humhub\modules\mail\widgets\Messages;
 use humhub\modules\mail\widgets\ConversationEntry;
-use humhub\modules\user\widgets\UserListBox;
+use humhub\modules\user\models\UserFilter;
 use Yii;
 use humhub\modules\mail\permissions\StartConversation;
 use yii\helpers\Html;
@@ -26,6 +28,7 @@ use humhub\modules\mail\models\forms\CreateMessage;
 use humhub\modules\mail\permissions\SendMail;
 use humhub\modules\user\models\UserPicker;
 use yii\web\NotFoundHttpException;
+use yii\web\Response;
 
 /**
  * MailController provides messaging actions.
@@ -47,7 +50,8 @@ class MailController extends Controller
     {
         return [
             [ControllerAccess::RULE_LOGGED_IN_ONLY],
-            [ControllerAccess::RULE_PERMISSION => StartConversation::class, 'actions' => ['create', 'add-user']]
+            [ControllerAccess::RULE_PERMISSION => StartConversation::class, 'actions' => ['create', 'add-user']],
+            [ControllerAccess::RULE_ADMIN_ONLY, 'actions' => ['remove-participant']]
         ];
     }
 
@@ -79,6 +83,7 @@ class MailController extends Controller
             'message' => $message,
             'messageCount' => UserMessage::getNewMessageCount(),
             'replyForm' => new ReplyForm(['model' => $message]),
+            'hasDeactivated' => $message->hasDeactivated()
         ]);
     }
 
@@ -167,9 +172,17 @@ class MailController extends Controller
      */
     public function actionUserList($id)
     {
-        return $this->renderAjaxContent(UserListBox::widget([
+        $filterModel = new MailUserFilter();
+        $filterModel->load(Yii::$app->request->post());
+
+        $message = Message::findOne(['id' => $id]);
+
+        return $this->renderAjaxContent(ChatUserList::widget([
             'query' => $this->getMessage($id, true)->getUsers(),
-            'title' => '<strong>'.Yii::t('MailModule.base', 'Participants').'</strong>'
+            'filter' => $filterModel,
+            'title' => '<strong>'.Yii::t('MailModule.base', 'Participants').'</strong>',
+            'conversationId' => $id,
+            'message' => $message
         ]));
     }
 
@@ -234,7 +247,7 @@ class MailController extends Controller
         }
 
         $result = UserPicker::filter([
-            'query' => User::find(),
+            'query' => UserFilter::find()->active()->filterBlockedUsers(),
             'keyword' => $keyword,
             'permission' => (!Yii::$app->user->isAdmin()) ? new SendMail() : null,
             'fillUser' => true,
@@ -513,5 +526,16 @@ class MailController extends Controller
         }
 
         return null;
+    }
+
+    public function actionRemoveParticipant($id, $userId): Response
+    {
+        $message = Message::findOne(['id' => $id]);
+        $result = $message->removeRecipient($userId);
+        if (!$result) {
+            Yii::$app->getSession()->setFlash('data-saved', Yii::t('MailModule.base', 'An error occurred while deleting'));
+        }
+
+        return $this->asJson(['result' => $result]);
     }
 }

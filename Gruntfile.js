@@ -2,8 +2,8 @@ module.exports = function (grunt) {
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        terser: {
-            main: {
+        uglify: {
+            mail: {
                 files: {
                     'resources/js/humhub.mail.messenger.bundle.min.js': ['resources/js/humhub.mail.messenger.bundle.js'],
                     'resources/js/humhub.mail.notification.min.js': ['resources/js/humhub.mail.notification.js'],
@@ -24,6 +24,11 @@ module.exports = function (grunt) {
                     'resources/js/humhub.mail.ConversationViewEntry.js',
                     'resources/js/humhub.mail.inbox.js',
                     'resources/js/humhub.mail.conversation.js',
+                    'resources/js/humhub.mail.reply.js',
+                    'resources/js/humhub.mail.draft.js',
+                    'resources/js/humhub.mail.mobile.js',
+                    'resources/js/humhub.mail.filter.unread.js',
+                    'resources/js/humhub.mail.userList.js',
                 ],
                 dest: 'resources/js/humhub.mail.messenger.bundle.js'
             },
@@ -41,11 +46,10 @@ module.exports = function (grunt) {
 
     //grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-concat');
-    // grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-terser');
 
 
-    grunt.registerTask('build', ['concat', 'terser', 'cssmin']);
+    grunt.registerTask('build', ['concat', 'uglify', 'cssmin']);
 };

@@ -23,6 +23,7 @@ return [
     'Receive Notifications when someone opens a new conversation.' => 'Saa ilmoitus aina kun joku aloittaa uuden keskustelun.',
     'Receive Notifications when someone sends you a message.' => 'Saa ilmoitus aina kun joku lähettää viestin sinulle.',
     'Receive private messages' => 'Vastaanota yksityisiä viestejä',
+    'Reply' => '',
     'Search' => 'Hae',
     'Seperate restrictions for new users' => 'Erilliset rajoitukset uusille käyttäjille',
     'Show menu item in top Navigation' => 'Näytä viestinappula ylä paneelissa.',

@@ -23,6 +23,7 @@ return [
     'Receive Notifications when someone opens a new conversation.' => 'Ricevi una notifica quando qualcuo crea una nuova conversazione',
     'Receive Notifications when someone sends you a message.' => 'Ricevi una notifica quando qualcuno ti invia un messaggio',
     'Receive private messages' => 'Ricevi messaggi privati',
+    'Reply' => '',
     'Search' => 'Ricerca',
     'Seperate restrictions for new users' => 'Restrizioni separate per i nuovi utenti',
     'Show menu item in top Navigation' => 'Mostra l\'icona del modulo nel menu superiore',
