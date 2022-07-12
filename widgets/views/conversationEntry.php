@@ -1,7 +1,9 @@
 <?php
 
 use humhub\modules\mail\helpers\Url;
+use humhub\modules\mail\models\MessageEntry;
 use humhub\modules\mail\widgets\SentOrSeen;
+use humhub\modules\ui\view\components\View;
 use humhub\modules\user\widgets\Image;
 use humhub\widgets\ModalButton;
 use humhub\modules\content\widgets\richtext\RichText;
@@ -9,8 +11,8 @@ use humhub\modules\mail\widgets\TimeAgo;
 use humhub\libs\Html;
 use humhub\modules\rocketcore\widgets\UserOccupation;
 
-/* @var $this \humhub\modules\ui\view\components\View */
-/* @var $entry \humhub\modules\mail\models\MessageEntry */
+/* @var $this View */
+/* @var $entry MessageEntry */
 /* @var $options array */
 /* @var $contentClass string */
 /* @var $showUserInfo boolean */
@@ -25,6 +27,8 @@ $occupation = class_exists('\\humhub\\modules\\rocketcore\\widgets\\UserOccupati
 $userDisabled = class_exists('\\humhub\\modules\\musztabel\\widgets\\PattyStatus')
     ? \humhub\modules\musztabel\widgets\PattyStatus::widget(['model' => $entry->user])
     : ''; //Helps to check if user is disabled. Returns 'Deactivated' if user's status is not equal to ENABLED. Can be customized in /views/musztabel/widgets/pattyStatus.php
+/** @var MessageEntry $reply */
+$reply = $entry->getReply()->one();
 ?>
 
 <?= Html::beginTag('div', $options) ?>
@@ -50,6 +54,11 @@ $userDisabled = class_exists('\\humhub\\modules\\musztabel\\widgets\\PattyStatus
                                 <p<?php if($userDisabled) : ?> class="profile-disable"<?php endif;?>><a href="<?= $entry->user->getUrl()?>"><?= Html::encode($entry->user->displayName); ?></a></p>
                             </div>
                         <?php endif;?>
+                        <?php if ($reply) : ?>
+                            <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
+                                <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
+                            </blockquote>
+                        <?php endif; ?>
                         <?= RichText::output($entry->content) ?>
                         <div class="foot hidden-from-desktop">
                             <?= $this->render('_conversationEntryMenu', ['entry' => $entry, 'badge' => false]) ?>
@@ -70,6 +79,11 @@ $userDisabled = class_exists('\\humhub\\modules\\musztabel\\widgets\\PattyStatus
             <div class="space-in-h-zero-xs col-xs">
                 <div class="content row row-between-lg space-out-h-zero-xs">
                     <div class="message col-xs-shrink col-lg-12 col-first-xs space-in-h-zero-xs <?= $contentClass ?>">
+                        <?php if ($reply) : ?>
+                            <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
+                                <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
+                            </blockquote>
+                        <?php endif; ?>
                         <?= RichText::output($entry->content) ?>
                         <div class="foot hidden-from-desktop">
                             <?= $this->render('_conversationEntryMenu', ['entry' => $entry, 'badge' => false]) ?>
