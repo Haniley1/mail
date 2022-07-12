@@ -41,6 +41,18 @@ $countUsers = count($message->users);
             </div>
         </div>
         <div class="mail-editor">
+            <div class="reply-container" data-ui-widget="mail.reply.MailReply" data-ui-init="1">
+                <div class="reply">
+                    <div class="reply-decoration"></div>
+                    <div class="reply-info">
+                        <div class="reply-author"></div>
+                        <div class="reply-text"></div>
+                    </div>
+                    <div class="reply-detach">
+                        <a href="#" id="reply-detach">x</a>
+                    </div>
+                </div>
+            </div>
             <?php if ($message->isBlocked()) : ?>
                 <div class="alert alert-danger">
                     <?= Yii::t('MailModule.views_mail_show', 'You are not allowed to participate in this conversation. You have been blocked by: {userNames}.', [
@@ -49,6 +61,7 @@ $countUsers = count($message->users);
                 </div>
             <?php elseif ($countUsers === 2 && $hasDeactivated) : ?>
                 <?php $form = ActiveForm::begin(['enableClientValidation' => false]); ?>
+                    <?= $form->field($replyForm, 'replyId')->hiddenInput()->label(false) ?>
                     <div class="form-textarea">
                         <?= $form->field($replyForm, 'message')->widget(MailRichtextEditor::class, ['id' => 'reply-'.time(), 'disabled' => true])->label(false) ?>
                     </div>
@@ -58,6 +71,7 @@ $countUsers = count($message->users);
                 <?php ActiveForm::end(); ?>
             <?php else : ?>
                 <?php $form = ActiveForm::begin(['enableClientValidation' => false]); ?>
+                    <?= $form->field($replyForm, 'replyId')->hiddenInput()->label(false) ?>
                     <div class="form-textarea">
                         <?= $form->field($replyForm, 'message')->widget(MailRichtextEditor::class, ['id' => 'reply-'.time()])->label(false) ?>
                     </div>

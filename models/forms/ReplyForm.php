@@ -30,6 +30,8 @@ class ReplyForm extends Model
      */
     public $reply;
 
+    public string $replyId = '';
+
     /**
      * Declares the validation rules.
      */
@@ -38,6 +40,7 @@ class ReplyForm extends Model
         return [
             ['message', 'required'],
             ['message', 'validateRecipients'],
+            ['replyId', 'string'],
         ];
     }
 
@@ -76,7 +79,8 @@ class ReplyForm extends Model
         $this->reply = new MessageEntry([
             'message_id' => $this->model->id,
             'user_id' => Yii::$app->user->id,
-            'content' => $this->message
+            'content' => $this->message,
+            'message_entry_id' => $this->replyId ?? null
         ]);
 
         if($this->reply->save()) {

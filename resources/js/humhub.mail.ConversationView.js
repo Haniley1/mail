@@ -80,6 +80,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
                         that.focus();
                     }
                     Widget.instance('#inbox').updateEntries([that.getActiveMessageId()]);
+                    Widget.instance('.reply-container').detachReply();
                     that.setLivePollInterval();
                 });
             } else {

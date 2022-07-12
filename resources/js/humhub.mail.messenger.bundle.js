@@ -80,6 +80,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
                         that.focus();
                     }
                     Widget.instance('#inbox').updateEntries([that.getActiveMessageId()]);
+                    Widget.instance('.reply-container').detachReply();
                     that.setLivePollInterval();
                 });
             } else {
@@ -867,9 +868,16 @@ humhub.module('mail.reply', function(module, require, $) {
         replyBtn: '.rocketmailreply-btn',
         editor: '.ProsemirrorEditor',
         messageDom: '[data-ui-richtext]',
+        avatar: '.avatar img',
+        reply: '.reply-container',
+        replyAuthor: '.reply-author',
+        replyText: '.reply-text',
+        replyId: '#replyform-replyid',
+        replyDetachButton: '#reply-detach',
     };
 
-    var REPLY_MAX_LENGTH = 256;
+    var REPLY_MAX_LENGTH = 40;
+    const EVENT_REPLY_CHANGED = 'mail:reply:changed';
 
     var Widget = require('ui.widget').Widget;
     var RichText = require('ui.richtext');
@@ -883,36 +891,10 @@ humhub.module('mail.reply', function(module, require, $) {
     };
 
     MailReplyButton.prototype.handle = function() {
-        this.clearEditor();
-        this.pasteEditor(this.getReplyCut());
-        this.fixEmptyBlock();
+        const messageReply = Widget.instance(selector.reply);
+        const messageId = this.getMessageId();
+        messageReply.attachReply(messageId);
         this.focusEditor();
-    };
-
-    MailReplyButton.prototype.pasteEditor = function(content, pos = 1) {
-        var $tr = this.editor.view.state.tr.insert(pos, content);
-        this.editor.view.dispatch($tr);
-    }
-
-    MailReplyButton.prototype.fixEmptyBlock = function() {
-        var view = this.editor.view;
-        var doc = view.state.doc;
-        view.dispatch(
-            view.state.tr.setSelection(
-                this.api.state.TextSelection.near(doc.resolve(doc.content.size - 4))
-            )
-        );
-        this.api.commands.joinBackward(view.state, view.dispatch, view);
-        // this.api.commands.liftEmptyBlock(view.state, view.dispatch);
-    };
-
-    MailReplyButton.prototype.clearEditor = function() {
-        this.editor.clear();
-        var $tr = this.editor.view.state.tr.insert(
-            0,
-            this.editor.parser.parse('>')
-        );
-        this.editor.view.dispatch($tr);
     };
 
     MailReplyButton.prototype.focusEditor = function() {
@@ -922,45 +904,153 @@ humhub.module('mail.reply', function(module, require, $) {
         this.editor.view.dispatch($tr.scrollIntoView());
     };
 
-    MailReplyButton.prototype.getNodesContent = function() {
-        return this.domParser.parse(this._getDomNode());
+    MailReplyButton.prototype._getEditor = function() {
+        return Widget.instance($(selector.messagesRoot).find(selector.editor)).editor;
     };
 
-    MailReplyButton.prototype.getReplyCut = function() {
-        var node = this.stripBlockquoteFromBeginning(this.getNodesContent());
-        if (node.nodeSize < REPLY_MAX_LENGTH) {
-            return node;
+    MailReplyButton.prototype.getMessageId = function () {
+        return this.$.closest(selector.convEntry).data('entry-id');
+    };
+
+    var MailReply = Widget.extend();
+    MailReply.prototype.init = function () {
+        this.api = PMApi;
+        this.editor = Widget.instance($(selector.editor)).editor;
+        this.domParser = this.api.model.DOMParser.fromSchema(this.editor.view.state.schema);
+        this.initDetachButton();
+    };
+
+    MailReply.prototype.scrollToOriginalMessage = function () {
+    };
+
+    MailReply.prototype.attachReply = function (messageId) {
+        const $messageContainer = this.getMessageContainer(messageId);
+        if (!$messageContainer.length) {
+            module.log('Message container not found', messageId);
+            return;
         }
-        var nodeCut = node.cut(0, REPLY_MAX_LENGTH);
-        var schema = this.editor.view.state.schema;
-        var ellipsisNode = schema.node('paragraph', null, [schema.text('...')]);
-        return nodeCut.content.addToEnd(ellipsisNode);
+
+        const messageInfo = this.getMessageInfo($messageContainer);
+        this.setReplyAuthor(messageInfo.author);
+        this.setReplyText(messageInfo.text);
+        this.setReplyId(messageInfo.id);
+        this.showReply();
+        $(document).trigger(EVENT_REPLY_CHANGED, [messageInfo.id, messageInfo.author, messageInfo.text]);
     };
 
-    MailReplyButton.prototype.stripBlockquoteFromBeginning = function(node) {
+    MailReply.prototype.detachReply = function () {
+        const replyId = this.getReplyId();
+        this.setReplyAuthor('');
+        this.setReplyText('');
+        this.setReplyId('');
+        this.hideReply();
+        $(document).trigger(EVENT_REPLY_CHANGED, [replyId, '', '']);
+    }
+
+    MailReply.prototype.getMessageId = function ($messageContainer) {
+        return $messageContainer.data('entry-id');
+    };
+
+    MailReply.prototype.getMessageAuthor = function ($messageContainer) {
+        return $messageContainer.find(selector.avatar).data('original-title');
+    };
+
+    MailReply.prototype.getMessageInfo = function ($messageContainer) {
+        const id = this.getMessageId($messageContainer);
+        const author = this.getMessageAuthor($messageContainer);
+        const text = this.getMessageTextCut($messageContainer);
+
+        return {id, author, text};
+    };
+
+    MailReply.prototype._getDomNode = function($messageContainer) {
+        return $messageContainer.find(selector.messageDom)[0];
+    };
+
+    MailReply.prototype.getNodesContent = function($messageContainer) {
+        return this.domParser.parse(this._getDomNode($messageContainer));
+    };
+
+    MailReply.prototype.stripBlockquoteFromBeginning = function(node) {
         if (node.content.size && node.content.content[0].type.name === 'blockquote') {
             return node.cut(node.content.content[0].nodeSize);
         }
         return node;
     };
 
-    MailReplyButton.prototype._getEditor = function() {
-        return Widget.instance($(selector.messagesRoot).find(selector.editor)).editor;
+    MailReply.prototype.getMessageText = function ($messageContainer) {
+        const node = this.stripBlockquoteFromBeginning(this.getNodesContent($messageContainer));
+        let result = '';
+        for (let i = 0; i < node.content.childCount; i++) {
+            if (node.content.content[i].isTextblock) {
+                const textContent = node.content.content[i].textContent;
+                if (!textContent.length) {
+                    continue;
+                }
+                result += result !== '' ? ' ' : '';
+                result += node.content.content[i].textContent;
+            }
+        }
+
+        return result;
     };
 
-    MailReplyButton.prototype._getDomNode = function() {
-        return this.$.closest(selector.convEntryContent).find(selector.messageDom)[0];
+    MailReply.prototype.getMessageTextCut = function ($messageContainer) {
+        const text = this.getMessageText($messageContainer);
+        if (text.length <= REPLY_MAX_LENGTH) {
+            return text;
+        }
+
+        return text.slice(0, REPLY_MAX_LENGTH) + '...';
     };
 
-    var MailReply = Widget.extend();
-    MailReply.prototype.init = function () {
-        this.originalMessageId = this._findOriginalMessageId();
+    MailReply.prototype.getMessageContainer = function (messageId) {
+        return $(`${selector.convEntry}[data-entry-id="${messageId}"]`);
     };
 
-    MailReply.prototype.scrollToOriginalMessage = function () {
+    MailReply.prototype.getReplyAuthor = function () {
+        return $(selector.replyAuthor).text();
     };
 
-    MailReply.prototype._findOriginalMessageId = function () {
+    MailReply.prototype.getReplyText = function () {
+        return $(selector.replyText).text();
+    };
+
+    MailReply.prototype.getReplyId = function () {
+        return $(selector.replyId).val();
+    };
+
+    MailReply.prototype.setReplyAuthor = function (author) {
+        $(selector.replyAuthor).text(author);
+    };
+
+    MailReply.prototype.setReplyText = function (text) {
+        $(selector.replyText).text(text);
+    };
+
+    MailReply.prototype.setReplyId = function (id) {
+        $(selector.replyId).val(id);
+    };
+
+    MailReply.prototype.showReply = function () {
+        $(selector.reply).css('display', 'flex');
+    };
+
+    MailReply.prototype.hideReply = function () {
+        $(selector.reply).css('display', 'none');
+    };
+
+    MailReply.prototype.initDetachButton = function () {
+        $(selector.replyDetachButton).click((e) => {
+            e.preventDefault();
+            this.detachReply();
+            this.focusEditor();
+        });
+    };
+
+    MailReply.prototype.focusEditor = function () {
+        const editor = Widget.instance($(selector.editor));
+        editor.focus();
     };
 
     var PMApi;
@@ -1058,7 +1148,7 @@ humhub.module('mail.reply', function(module, require, $) {
         init: init,
         initReplyButton: initReplyButton,
         MailReply: MailReply,
-        MailReplyButton: MailReplyButton,
+        MailReplyButton: MailReplyButton
     });
 });
 
@@ -1071,6 +1161,11 @@ humhub.module('mail.draft', function(module, require, $) {
     };
 
     var EVENT_DRAFT_CHANGED = 'mail:draft:changed';
+    var EVENT_REPLY_CHANGED = 'mail:reply:changed';
+
+    const CONVERSATION_DRAFTS_KEY = 'mail:conversation:drafts';
+    const CONVERSATION_REPLY_KEY = 'mail:conversation:reply';
+
     var Widget = require('ui.widget').Widget;
     var url = require('util').url;
     var RichText = require('ui.richtext');
@@ -1087,27 +1182,27 @@ humhub.module('mail.draft', function(module, require, $) {
         };
     }
 
-    var DraftsStorage = function() {
-        this.key = 'mail:conversation:drafts';
+    const Storage = function(key) {
+        this.key = key;
         this.internalStorage = window.localStorage || window.sessionStorage;
         if (this.internalStorage.getItem(this.key) === null) {
             this._saveList({});
         }
     };
 
-    DraftsStorage.prototype.get = function(convId) {
+    Storage.prototype.get = function(convId) {
         var list = this._getList();
         return list[convId] || null;
     };
 
-    DraftsStorage.prototype.set = function(convId, draft) {
+    Storage.prototype.set = function(convId, draft) {
         var list = this._getList();
         $(document).trigger(EVENT_DRAFT_CHANGED, [convId, draft, list]);
         list[convId] = draft;
         this._saveList(list);
     };
 
-    DraftsStorage.prototype.unset = function(convId) {
+    Storage.prototype.unset = function(convId) {
         var list = this._getList();
         if (typeof list[convId] !== undefined) {
             delete list[convId];
@@ -1115,11 +1210,11 @@ humhub.module('mail.draft', function(module, require, $) {
         }
     };
 
-    DraftsStorage.prototype._getList = function() {
+    Storage.prototype._getList = function() {
         return JSON.parse(this.internalStorage.getItem(this.key));
     };
 
-    DraftsStorage.prototype._saveList = function(list) {
+    Storage.prototype._saveList = function(list) {
         this.internalStorage.setItem(this.key, JSON.stringify(list));
     };
 
@@ -1162,6 +1257,7 @@ humhub.module('mail.draft', function(module, require, $) {
         var view = editor.view;
         var convId = getSelectedConversationId();
         var draft = getConversationDraft(convId);
+        var replyId = getConversationReply(convId);
         if (draft && editor.isEmpty()) {
             var $tr = editor.view.state.tr.insert(
                 0,
@@ -1171,19 +1267,27 @@ humhub.module('mail.draft', function(module, require, $) {
             PMApi.commands.joinBackward(view.state, view.dispatch, view);
         }
 
+        if (replyId) {
+            setTimeout(function () {
+                Widget.instance('.reply-container').attachReply(replyId);
+            }, 500);
+        }
+
         editor.on('keyup mouseup', throttle(function () {
             var draft = editor.serializer.serialize(editor.view.state.doc);
-            storage.set(convId, draft);
+            draftStorage.set(convId, draft);
         }, 1000));
 
         editor.$.on('clear', function() {
-            storage.unset(convId);
+            draftStorage.unset(convId);
         });
     };
 
-    var storage;
+    var draftStorage;
+    var replyStorage;
     var mutationObserver;
     var draftsObserver;
+    var replyObserver;
     var PMApi;
     var initialized = false;
     var init = function() {
@@ -1201,13 +1305,26 @@ humhub.module('mail.draft', function(module, require, $) {
             mutationObserver = new MutationObserver(loadDraft)
         }
 
+        const convId = getSelectedConversationId();
         PMApi = RichText.prosemirror.api;
-        storage = new DraftsStorage();
+        draftStorage = new Storage(CONVERSATION_DRAFTS_KEY);
+        replyStorage = new Storage(CONVERSATION_REPLY_KEY);
         mutationObserver.observe($messagesRoot[0], { childList: true, subtree: true });
         draftsObserver = function(ev, convId) {
             module.log.debug("Draft #" + convId + " just changed");
         };
         $(document).on(EVENT_DRAFT_CHANGED, draftsObserver);
+
+        replyObserver = function (_ev, id, author, text) {
+            if (author === '' && text === '') {
+                replyStorage.unset(convId);
+                return;
+            }
+
+            replyStorage.set(convId, id);
+        };
+        $(document).on(EVENT_REPLY_CHANGED, replyObserver);
+
         initialized = true;
     };
 
@@ -1218,17 +1335,25 @@ humhub.module('mail.draft', function(module, require, $) {
         if (draftsObserver) {
             $(document).off(EVENT_DRAFT_CHANGED, draftsObserver);
         }
+        if (replyObserver) {
+            $(document).off(EVENT_REPLY_CHANGED, replyObserver);
+        }
         initialized = false;
     };
 
     var getConversationDraft = function (convId) {
-        return storage.get(convId);
+        return draftStorage.get(convId);
+    };
+
+    var getConversationReply = function (convId) {
+        return replyStorage.get(convId);
     };
 
     module.export({
         initOnPjaxLoad: true,
         init: init,
-        DraftsStorage: DraftsStorage,
+        DraftsStorage: draftStorage,
+        ReplyStorage: replyStorage
     });
 });
 
