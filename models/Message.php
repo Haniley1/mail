@@ -78,7 +78,7 @@ class Message extends ActiveRecord
 
         if ($entryId && $type === 'old') {
             $query->andWhere(['<', 'message_entry.id', $entryId]);
-        } elseif ($entryId) {
+        } elseif ($entryId && $type === 'new') {
             $query->addOrderBy(['created_at' => SORT_ASC]);
             $query->andWhere(['>', 'message_entry.id', $entryId]);
         }
@@ -87,7 +87,7 @@ class Message extends ActiveRecord
         $limit = $entryId ? $module->conversationUpdatePageSize : $module->conversationInitPageSize;
         $query->limit($limit);
 
-        return $type === 'old' ? array_reverse($query->all()) : $query->all();
+        return $type === 'new' ? $query->all() : array_reverse($query->all());
     }
 
     /**

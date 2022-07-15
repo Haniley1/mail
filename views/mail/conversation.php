@@ -39,6 +39,9 @@ $countUsers = count($message->users);
             <div class="media-list conversation-entry-list">
                 <?= Messages::widget(['message' => $message])?>
             </div>
+            <div class="to-end-button-container">
+                <a href="#" class="to-last-message">&nbsp;</a>
+            </div>
         </div>
         <div class="mail-editor">
             <div class="reply-container" data-ui-widget="mail.reply.MailReply" data-ui-init="1">

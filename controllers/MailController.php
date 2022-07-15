@@ -151,23 +151,23 @@ class MailController extends Controller
     {
         $from = (int) Yii::$app->request->get('from');
         $to = (int) Yii::$app->request->get('to');
-        if (!$from && !$to) {
-            throw new HttpException(422, 'No have required field "from" or "to"');
-        }
         $message = ($id instanceof Message) ? $id : $this->getMessage($id);
 
         $this->checkMessagePermissions($message);
 
-        $entryId = $from ?: $to;
-        $type = $from ? 'old' : 'new';
+        $entryId = $this->getEntryId($from, $to);
+        $type = $this->getType($from, $to);
         $entries = $message->getEntryPage($entryId, $type);
 
         if ($from) {
             $result = Messages::widget(['message' => $message, 'from' => $from]);
             $isLast = !$message->hasEntriesBefore($entries[0]->id);
-        } else {
+        } elseif ($to) {
             $result = Messages::widget(['message' => $message, 'entries' => $entries]);
             $isLast = !$message->hasEntriesAfter($entries[count($entries) - 1]->id);
+        } else {
+            $result = Messages::widget(['message' => $message, 'entries' => $entries]);
+            $isLast = !$message->hasEntriesAfter($entries[0]->id);
         }
 
         return $this->asJson([
@@ -571,5 +571,23 @@ class MailController extends Controller
         }
 
         return $this->asJson(['result' => $result]);
+    }
+
+    private function getEntryId($from, $to): ?int
+    {
+        if (!$from && !$to) {
+            return null;
+        }
+
+        return $from ?: $to;
+    }
+
+    private function getType($from, $to): string
+    {
+        if (!$from && !$to) {
+            return 'last';
+        }
+
+        return $from ? 'old' : 'new';
     }
 }
