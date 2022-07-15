@@ -87,6 +87,22 @@ class MailController extends Controller
         ]);
     }
 
+    public function actionFind($id, $entryId): Response
+    {
+        $message = ($id instanceof Message) ? $id : $this->getMessage($id);
+        $this->checkMessagePermissions($message);
+        $message->seen(Yii::$app->user->id);
+        $entries = $message->getEntriesAroundEntry($entryId);
+        $firstEntryId = $entries[0]->id ?? false;
+        $lastEntryId = $entries[count($entries) - 1]->id ?? false;
+
+        return $this->asJson([
+            'result' => Messages::widget(['message' => $message, 'entries' => $entries]),
+            'hasBefore' => $firstEntryId ? $message->hasEntriesBefore($firstEntryId) : false,
+            'hasAfter' => $lastEntryId ? $message->hasEntriesAfter($lastEntryId) : false,
+        ]);
+    }
+
     public function actionSeen()
     {
         $id = Yii::$app->request->post('id');
@@ -126,19 +142,37 @@ class MailController extends Controller
         return $this->renderAjaxContent(Messages::widget(['message' => $message, 'entries' => $message->getEntryUpdates($from)->all()]));
     }
 
-    public function actionLoadMore($id, $from)
+    /**
+     * @param $id
+     * @return mixed
+     * @throws \HttpException
+     */
+    public function actionLoadMore($id)
     {
+        $from = (int) Yii::$app->request->get('from');
+        $to = (int) Yii::$app->request->get('to');
+        if (!$from && !$to) {
+            throw new HttpException(422, 'No have required field "from" or "to"');
+        }
         $message = ($id instanceof Message) ? $id : $this->getMessage($id);
 
         $this->checkMessagePermissions($message);
 
-        $entries = $message->getEntryPage($from);
+        $entryId = $from ?: $to;
+        $type = $from ? 'old' : 'new';
+        $entries = $message->getEntryPage($entryId, $type);
 
-        $result = Messages::widget(['message' => $message, 'from' => $from]);
+        if ($from) {
+            $result = Messages::widget(['message' => $message, 'from' => $from]);
+            $isLast = !$message->hasEntriesBefore($entries[0]->id);
+        } else {
+            $result = Messages::widget(['message' => $message, 'entries' => $entries]);
+            $isLast = !$message->hasEntriesAfter($entries[count($entries) - 1]->id);
+        }
 
         return $this->asJson([
             'result' => $result,
-            'isLast' => (count($entries) < Module::getModuleInstance()->conversationUpdatePageSize)
+            'isLast' => $isLast
         ]);
     }
 

@@ -1,4 +1,12 @@
 humhub.module('mail.ConversationView', function (module, require, $) {
+    const delay = function (ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    const selector = {
+        entry: '.mail-conversation-entry',
+        entryList: '.conversation-entry-list',
+    };
 
     var Widget = require('ui.widget').Widget;
     var loader = require('ui.loader');
@@ -173,6 +181,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         client.get(this.options.loadMessageUrl, {data: {id: messageId}}).then(function (response) {
             that.setActiveMessageId(messageId);
             that.options.isLast = false;
+            that.options.hasAfter = false;
 
             var inbox = Widget.instance('#inbox');
             inbox.updateActiveItem();
@@ -261,31 +270,42 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         return list.scrollHeight - list.offsetHeight - list.scrollTop <= tolerance;
     };
 
-    ConversationView.prototype.initScroll = function () {
+    ConversationView.prototype.initScroll = function (isFirstLoading = true) {
         if (window.IntersectionObserver) {
             var $entryList = this.$.find('.conversation-entry-list');
             var $streamEnd = $('<div class="conversation-stream-end"></div>');
+            var $streamStart = $('<div class="conversation-stream-start"></div>');
             $entryList.prepend($streamEnd);
+            $entryList.append($streamStart);
 
             var that = this;
             var observer = new IntersectionObserver(function (entries) {
-                if (that.preventScrollLoading()) {
-                    return;
-                }
-
-                if (entries.length && entries[0].isIntersecting) {
+                const intersecting = entries.length && entries[0].isIntersecting;
+                if (intersecting && entries[0].target.className === 'conversation-stream-end' && !that.preventScrollLoading()) {
                     loader.prepend($entryList);
+                    const lastEntryId = $entryList.find(`${selector.entry}:first`).data('entry-id');
                     that.loadMore().finally(function () {
                         loader.reset($entryList);
-                        that.scrollToBottom()
+                        if (isFirstLoading) {
+                            that.scrollToBottom();
+                        } else {
+                            that.scrollToMessage(lastEntryId, 0, 'top');
+                        }
+                        isFirstLoading = false;
+                    });
+                } else if (intersecting && entries[0].target.className === 'conversation-stream-start' && !that.preventScrollLoadingAfter()) {
+                    loader.append($entryList);
+                    that.loadMore('new').finally(function () {
+                        loader.reset($entryList);
                     });
                 }
 
             }, {root: $entryList[0], rootMargin: "50px"});
 
             // Assure the conversation list is scrollable by loading more entries until overflow
-            return this.assureScroll().then(function () {
+            return this.assureScroll(isFirstLoading).then(function () {
                 observer.observe($streamEnd[0]);
+                observer.observe($streamStart[0]);
                 if(view.isLarge()) {
                     that.getListNode().niceScroll({
                         cursorwidth: "7",
@@ -300,22 +320,32 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         }
     };
 
-    ConversationView.prototype.loadMore = function () {
+    ConversationView.prototype.loadMore = function (type = 'old') {
         var that = this;
 
-        var data = {
-            id: this.getActiveMessageId(),
-            from: this.$.find('.mail-conversation-entry:first').data('entryId')
-        };
+        var data = {id: this.getActiveMessageId()};
+        if (type === 'old') {
+            data.from = this.$.find('.mail-conversation-entry:first').data('entryId');
+        } else if (type === 'new') {
+            data.to = this.$.find('.mail-conversation-entry:last').data('entryId');
+        }
 
         return client.get(this.options.loadMoreUrl, {data: data}).then(function (response) {
             if (response.result) {
                 var $result = $(response.result).hide();
-                that.$.find('.conversation-entry-list').find('.conversation-stream-end').after($result);
+                if (type === 'old') {
+                    that.$.find('.conversation-entry-list').find('.conversation-stream-end').after($result);
+                } else if (type === 'new') {
+                    that.$.find('.conversation-entry-list').find('.conversation-stream-start').before($result);
+                }
                 $result.fadeIn();
             }
 
-            that.options.isLast = !response.result || response.isLast;
+            if (type === 'old') {
+                that.options.isLast = !response.result || response.isLast;
+            } else if (type === 'new') {
+                that.options.hasAfter = response.result && !response.isLast;
+            }
         }).catch(function (err) {
             module.log.error(err, true);
         });
@@ -329,15 +359,19 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         return !this.options.isLast;
     };
 
-    ConversationView.prototype.assureScroll = function () {
+    ConversationView.prototype.assureScroll = function (isFirstLoading = true) {
         var that = this;
         var $entryList = this.$.find('.conversation-entry-list');
         if ($entryList[0].offsetHeight >= $entryList[0].scrollHeight && this.canLoadMore()) {
             return this.loadMore().then(function () {
-                return that.assureScroll();
+                return that.assureScroll(isFirstLoading);
             }).catch(function () {
                 return Promise.resolve();
             })
+        }
+
+        if (!isFirstLoading) {
+            return Promise.resolve();
         }
 
         return that.scrollToBottom();
@@ -454,6 +488,103 @@ humhub.module('mail.ConversationView', function (module, require, $) {
             }
         }
     }
+
+    ConversationView.prototype.getMessageContainer = function (messageId) {
+        return $(`${selector.entry}[data-entry-id="${messageId}"]`);
+    };
+
+    ConversationView.prototype.scrollToMessage = function (messageId, scrollTime = 400, position = 'middle') {
+        const getInnerOffset = function (niceScroll, $element, position) {
+            if (position === 'top') {
+                return -30;
+            }
+            if (position === 'bottom') {
+                return -niceScroll.cursorwidth + $element.height() + 90;
+            }
+
+            return -(niceScroll.cursorwidth / 2) + ($element.height() / 2) + 60;
+        };
+
+        const scrollWithAnimationDesktop = function ($element) {
+            const $entryList = $(selector.entryList);
+            const niceScroll = $entryList.getNiceScroll(0);
+            const currentScrollTop = niceScroll.getScrollTop();
+            const innerOffset = getInnerOffset(niceScroll, $element, position);
+            const newScrollTop = currentScrollTop + $element.position().top + innerOffset;
+
+            return new Promise(resolve => {
+                if (newScrollTop > niceScroll.page.maxh) {
+                    return resolve();
+                }
+                $entryList.animate({scrollTop: newScrollTop}, scrollTime, () => {
+                    resolve();
+                });
+            });
+        };
+
+        const scrollWithAnimationMobile = function ($element) {
+            const $entryList = $(selector.entryList);
+            const currentScrollTop = $entryList.scrollTop();
+            const innerOffset = ($entryList.get(0).clientHeight / 2) - ($element.height() / 2);
+            const newScrollTop = currentScrollTop + $element.position().top - innerOffset;
+
+            return new Promise(resolve => {
+                $entryList.animate({scrollTop: newScrollTop}, scrollTime, () => {
+                    resolve();
+                });
+            });
+        };
+
+        const $messageContainer = this.getMessageContainer(messageId);
+        if (!$messageContainer.length) {
+            return this.loadAroundEntries(this.getActiveMessageId(), messageId)
+              .then(() => this.scrollToMessage(messageId));
+        }
+
+        if (view.isSmall() || view.isMedium()) {
+            return scrollWithAnimationMobile($messageContainer);
+        }
+
+        return scrollWithAnimationDesktop($messageContainer);
+    };
+
+    ConversationView.prototype.highlightMessage = function (messageId) {
+        const $messageContainer = this.getMessageContainer(messageId);
+        $messageContainer.addClass('highlight');
+        delay(4000).then(() => {
+            $messageContainer.removeClass('highlight');
+        });
+    };
+
+    ConversationView.prototype.loadAroundEntries = function (messageId, entryId) {
+        this.options.isLast = true;
+        this.options.hasAfter = false;
+        return client.get(this.options.aroundEntriesUrl, {data: {id: messageId, entryId: entryId}})
+            .then(response => {
+                this.options.isLast = !response.hasBefore;
+                this.options.hasAfter = response.hasAfter;
+                return this.updateEntriesList(response.result);
+            })
+            .catch(err => {
+                module.log.error(err, true)
+            });
+    };
+
+    ConversationView.prototype.updateEntriesList = function (html) {
+        return new Promise((resolve) => {
+            this.getListNode().html(html);
+            this.initScroll(false);
+            resolve();
+        });
+    };
+
+    ConversationView.prototype.preventScrollLoadingAfter = function () {
+        return this.scrollLock || !this.canLoadMoreAfter();
+    };
+
+    ConversationView.prototype.canLoadMoreAfter = function () {
+        return this.options.hasAfter;
+    };
 
     module.export = ConversationView;
 });

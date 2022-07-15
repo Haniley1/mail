@@ -162,4 +162,9 @@ class Url extends \yii\helpers\Url
 
         return static::to([$url]);
     }
+
+    public static function toAroundEntries()
+    {
+        return static::to(['/mail/mail/find']);
+    }
 }

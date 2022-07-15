@@ -55,9 +55,11 @@ $reply = $entry->getReply()->one();
                             </div>
                         <?php endif;?>
                         <?php if ($reply) : ?>
-                            <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
-                                <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
-                            </blockquote>
+                            <a href="#" data-action-click="mail.reply.scrollToOriginalMessage" data-action-params='{"messageId":<?= $reply->id ?>}'>
+                                <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
+                                    <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
+                                </blockquote>
+                            </a>
                         <?php endif; ?>
                         <?= RichText::output($entry->content) ?>
                         <div class="foot hidden-from-desktop">
@@ -80,9 +82,11 @@ $reply = $entry->getReply()->one();
                 <div class="content row row-between-lg space-out-h-zero-xs">
                     <div class="message col-xs-shrink col-lg-12 col-first-xs space-in-h-zero-xs <?= $contentClass ?>">
                         <?php if ($reply) : ?>
-                            <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
-                                <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
-                            </blockquote>
+                            <a href="#" data-action-click="mail.reply.scrollToOriginalMessage" data-action-params='{"messageId":<?= $reply->id ?>}'>
+                                <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
+                                    <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
+                                </blockquote>
+                            </a>
                         <?php endif; ?>
                         <?= RichText::output($entry->content) ?>
                         <div class="foot hidden-from-desktop">
