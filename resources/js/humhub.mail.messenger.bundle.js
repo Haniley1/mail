@@ -354,7 +354,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
                 } else {
                     that.options.hasAfter = false;
                     that.options.isLast = response.isLast;
-                    return that.updateEntriesList(response.result);
+                    return that.updateEntriesList(response.result, 'down');
                 }
             }
 
@@ -550,6 +550,8 @@ humhub.module('mail.ConversationView', function (module, require, $) {
 
         const $messageContainer = this.getMessageContainer(messageId);
         if (!$messageContainer.length) {
+            const thirdMessageId = this.getListNode().find(`${selector.entry}:nth(2)`).data('entry-id');
+            this.scrollToMessage(thirdMessageId, 400, 'top');
             return this.loadAroundEntries(this.getActiveMessageId(), messageId)
               .then(() => this.scrollToMessage(messageId));
         }
@@ -583,11 +585,29 @@ humhub.module('mail.ConversationView', function (module, require, $) {
             });
     };
 
-    ConversationView.prototype.updateEntriesList = function (html) {
+    ConversationView.prototype.updateEntriesList = function (html, direction = 'up', animationTimeout = 400) {
         return new Promise((resolve) => {
-            this.getListNode().find(selector.entry).remove();
-            $(html).insertBefore(this.getListNode().find(selector.startPoint));
-            resolve();
+            let $message;
+            if (direction === 'up') {
+                $message = this.getListNode().find(`${selector.entry}:first`);
+                $(html).insertBefore($message);
+            } else {
+                $message = this.getListNode().find(`${selector.entry}:last`);
+                $(html).insertAfter($message);
+            }
+
+            setTimeout(() => {
+                this.getListNode().find(selector.entry).each((idx, entry) => {
+                    const condition = direction === 'up'
+                      ? $(entry).data('entry-id') >= $message.data('entry-id')
+                      : $(entry).data('entry-id') <= $message.data('entry-id');
+
+                    if (condition) {
+                        $(entry).remove();
+                    }
+                });
+                resolve();
+            }, animationTimeout)
         });
     };
 
@@ -606,6 +626,8 @@ humhub.module('mail.ConversationView', function (module, require, $) {
             return this.scrollToMessage(lastMessageId, 400, 'bottom');
         }
 
+        const fourthMessageId = this.getListNode().find(`${selector.entry}:nth-last-child(4)`).data('entry-id');
+        this.scrollToMessage(fourthMessageId, 1000, 'bottom');
         return this.loadMore('last').then(() => {
             this.scrollToBottom();
         });
