@@ -6,6 +6,8 @@ humhub.module('mail.ConversationView', function (module, require, $) {
     const selector = {
         entry: '.mail-conversation-entry',
         entryList: '.conversation-entry-list',
+        lastMessageButton: '.to-last-message',
+        lastMessageButtonContainer: '.to-end-button-container',
     };
 
     var Widget = require('ui.widget').Widget;
@@ -19,6 +21,8 @@ humhub.module('mail.ConversationView', function (module, require, $) {
 
     var ConversationView = Widget.extend();
 
+    const SCROLL_TOLERANCE = 200;
+
     ConversationView.prototype.init = function () {
         additions.observe(this.$);
 
@@ -31,13 +35,13 @@ humhub.module('mail.ConversationView', function (module, require, $) {
             this.reload();
         }
 
-        this.$.on('mouseenter', '.mail-conversation-entry', function () {
+        this.$.on('mouseenter', selector.entry, function () {
             $(this).find('.conversation-menu').show();
-        }).on('mouseleave', '.mail-conversation-entry', function () {
+        }).on('mouseleave', selector.entry, function () {
             $(this).find('.conversation-menu').hide();
         });
 
-        this.$.on('click', '.to-last-message', function () {
+        this.$.on('click', selector.lastMessageButton, function () {
             that.toLastMessage();
         });
 
@@ -315,6 +319,12 @@ humhub.module('mail.ConversationView', function (module, require, $) {
                 observer.observe($streamStart[0]);
                 $entryList.prepend($streamEnd);
                 $entryList.append($streamStart);
+
+                $entryList.scroll(function () {
+                    const maxScrollTop = $entryList.get(0).scrollHeight - $entryList.outerHeight();
+                    ($entryList.scrollTop() > maxScrollTop - SCROLL_TOLERANCE)
+                      ? that.hideToEndButton() : that.showToEndButton();
+                });
             });
         }
     };
@@ -341,7 +351,9 @@ humhub.module('mail.ConversationView', function (module, require, $) {
                     that.$.find('.conversation-entry-list').find('.conversation-stream-start').before($result);
                     $result.fadeIn();
                 } else {
+                    console.log('loaded');
                     that.options.hasAfter = false;
+                    that.options.isLast = response.isLast;
                     return that.updateEntriesList(response.result);
                 }
             }
@@ -577,7 +589,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
     ConversationView.prototype.updateEntriesList = function (html) {
         return new Promise((resolve) => {
             this.getListNode().html(html);
-            this.initScroll(false);
+            console.log('replaced');
             resolve();
         });
     };
@@ -591,9 +603,23 @@ humhub.module('mail.ConversationView', function (module, require, $) {
     };
 
     ConversationView.prototype.toLastMessage = function () {
+        if (!this.options.hasAfter) {
+            const lastMessageId = this.$.find('.mail-conversation-entry:last').data('entryId');
+            return this.scrollToMessage(lastMessageId, 400, 'bottom');
+        }
+
         return this.loadMore('last').then(() => {
+            console.log('then');
             this.scrollToBottom();
         });
+    };
+
+    ConversationView.prototype.hideToEndButton = function () {
+        this.$.find(selector.lastMessageButtonContainer).fadeOut();
+    };
+
+    ConversationView.prototype.showToEndButton = function () {
+        this.$.find(selector.lastMessageButtonContainer).fadeIn();
     };
 
     module.export = ConversationView;

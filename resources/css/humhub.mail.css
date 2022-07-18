@@ -21,21 +21,27 @@
 }
 
 .to-end-button-container {
+    display: none;
     position: absolute;
-    bottom: 20px;
+    bottom: 10px;
     right: 20px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgb(0 0 0 / 10%);
 }
 
 .to-last-message {
     position: relative;
     display: block;
-    width: 22px;
-    height: 22px;
+    width: 47px;
+    height: 47px;
+    line-height: 44px;
+    text-align: center;
 }
 
 .to-last-message:after {
     content: '';
-    position: absolute;
+    display: inline-block;
     width: 14px;
     height: 14px;
     border-right: 2px solid #B4B4B4;

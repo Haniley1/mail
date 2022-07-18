@@ -40,7 +40,7 @@ $countUsers = count($message->users);
                 <?= Messages::widget(['message' => $message])?>
             </div>
             <div class="to-end-button-container">
-                <a href="#" class="to-last-message">&nbsp;</a>
+                <a href="#" class="to-last-message"></a>
             </div>
         </div>
         <div class="mail-editor">
