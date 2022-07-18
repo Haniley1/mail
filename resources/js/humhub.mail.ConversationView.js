@@ -586,7 +586,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
     ConversationView.prototype.updateEntriesList = function (html) {
         return new Promise((resolve) => {
             this.getListNode().find(selector.entry).remove();
-            this.getListNode().find(selector.startPoint).prepend(html);
+            $(html).insertBefore(this.getListNode().find(selector.startPoint));
             resolve();
         });
     };
