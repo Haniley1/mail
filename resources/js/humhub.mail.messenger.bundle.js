@@ -551,7 +551,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         const $messageContainer = this.getMessageContainer(messageId);
         if (!$messageContainer.length) {
             const fourthMessageId = this.getListNode().find(`${selector.entry}:nth(3)`).data('entry-id');
-            this.scrollToMessage(fourthMessageId, 1000, 'top');
+            this.scrollToMessage(fourthMessageId, 2000, 'top');
             return this.loadAroundEntries(this.getActiveMessageId(), messageId)
               .then(() => this.scrollToMessage(messageId));
         }
@@ -627,7 +627,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         }
 
         const fourthMessageId = this.getListNode().find(`${selector.entry}:nth-last-child(4)`).data('entry-id');
-        this.scrollToMessage(fourthMessageId, 1000, 'bottom');
+        this.scrollToMessage(fourthMessageId, 2000, 'bottom');
         return this.loadMore('last').then(() => {
             this.scrollToBottom();
         });
