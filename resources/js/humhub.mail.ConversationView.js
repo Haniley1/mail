@@ -8,6 +8,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         entryList: '.conversation-entry-list',
         lastMessageButton: '.to-last-message',
         lastMessageButtonContainer: '.to-end-button-container',
+        startPoint: '.conversation-stream-start'
     };
 
     var Widget = require('ui.widget').Widget;
@@ -41,8 +42,8 @@ humhub.module('mail.ConversationView', function (module, require, $) {
             $(this).find('.conversation-menu').hide();
         });
 
-        this.$.on('click', selector.lastMessageButton, function () {
-            that.toLastMessage();
+        this.$.on('click', selector.lastMessageButton, function (e) {
+            that.toLastMessage(e);
         });
 
         this.detectOpenedDialog();
@@ -396,13 +397,10 @@ humhub.module('mail.ConversationView', function (module, require, $) {
     };
 
     ConversationView.prototype.updateContent = function (html) {
-        var that = this;
-        return new Promise(function (resolve) {
-            that.$.html(html);
-            resolve();
+        return new Promise((resolve) => {
+            this.$.html(html).promise().done(() => resolve());
         });
     };
-
 
     ConversationView.prototype.getActiveMessageId = function () {
         return this.options.messageId;
@@ -587,7 +585,8 @@ humhub.module('mail.ConversationView', function (module, require, $) {
 
     ConversationView.prototype.updateEntriesList = function (html) {
         return new Promise((resolve) => {
-            this.getListNode().html(html);
+            this.getListNode().find(selector.entry).remove();
+            this.getListNode().find(selector.startPoint).prepend(html);
             resolve();
         });
     };
@@ -600,7 +599,8 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         return this.options.hasAfter;
     };
 
-    ConversationView.prototype.toLastMessage = function () {
+    ConversationView.prototype.toLastMessage = function (e) {
+        e.preventDefault();
         if (!this.options.hasAfter) {
             const lastMessageId = this.$.find('.mail-conversation-entry:last').data('entryId');
             return this.scrollToMessage(lastMessageId, 400, 'bottom');

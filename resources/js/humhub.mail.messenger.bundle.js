@@ -8,6 +8,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         entryList: '.conversation-entry-list',
         lastMessageButton: '.to-last-message',
         lastMessageButtonContainer: '.to-end-button-container',
+        startPoint: '.conversation-stream-start'
     };
 
     var Widget = require('ui.widget').Widget;
@@ -41,8 +42,8 @@ humhub.module('mail.ConversationView', function (module, require, $) {
             $(this).find('.conversation-menu').hide();
         });
 
-        this.$.on('click', selector.lastMessageButton, function () {
-            that.toLastMessage();
+        this.$.on('click', selector.lastMessageButton, function (e) {
+            that.toLastMessage(e);
         });
 
         this.detectOpenedDialog();
@@ -351,7 +352,6 @@ humhub.module('mail.ConversationView', function (module, require, $) {
                     that.$.find('.conversation-entry-list').find('.conversation-stream-start').before($result);
                     $result.fadeIn();
                 } else {
-                    console.log('loaded');
                     that.options.hasAfter = false;
                     that.options.isLast = response.isLast;
                     return that.updateEntriesList(response.result);
@@ -397,13 +397,10 @@ humhub.module('mail.ConversationView', function (module, require, $) {
     };
 
     ConversationView.prototype.updateContent = function (html) {
-        var that = this;
-        return new Promise(function (resolve) {
-            that.$.html(html);
-            resolve();
+        return new Promise((resolve) => {
+            this.$.html(html).promise().done(() => resolve());
         });
     };
-
 
     ConversationView.prototype.getActiveMessageId = function () {
         return this.options.messageId;
@@ -588,8 +585,8 @@ humhub.module('mail.ConversationView', function (module, require, $) {
 
     ConversationView.prototype.updateEntriesList = function (html) {
         return new Promise((resolve) => {
-            this.getListNode().html(html);
-            console.log('replaced');
+            this.getListNode().find(selector.entry).remove();
+            this.getListNode().find(selector.startPoint).prepend(html);
             resolve();
         });
     };
@@ -602,14 +599,14 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         return this.options.hasAfter;
     };
 
-    ConversationView.prototype.toLastMessage = function () {
+    ConversationView.prototype.toLastMessage = function (e) {
+        e.preventDefault();
         if (!this.options.hasAfter) {
             const lastMessageId = this.$.find('.mail-conversation-entry:last').data('entryId');
             return this.scrollToMessage(lastMessageId, 400, 'bottom');
         }
 
         return this.loadMore('last').then(() => {
-            console.log('then');
             this.scrollToBottom();
         });
     };
