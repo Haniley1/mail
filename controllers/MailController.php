@@ -159,9 +159,16 @@ class MailController extends Controller
         $type = $this->getType($from, $to);
         $entries = $message->getEntryPage($entryId, $type);
 
+        if (!$entries) {
+            return $this->asJson([
+                'result' => '',
+                'isLast' => true
+            ]);
+        }
+
         if ($from) {
             $result = Messages::widget(['message' => $message, 'from' => $from]);
-            $isLast = !$message->hasEntriesBefore($entries[0]->id);
+            $isLast = !$entries || !$message->hasEntriesBefore($entries[0]->id);
         } elseif ($to) {
             $result = Messages::widget(['message' => $message, 'entries' => $entries]);
             $isLast = !$message->hasEntriesAfter($entries[count($entries) - 1]->id);
