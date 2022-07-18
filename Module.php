@@ -37,12 +37,12 @@ class Module extends \humhub\components\Module
     /**
      * @var int Defines the initial message amount loaded for a conversation
      */
-    public $conversationInitPageSize = 50;
+    public $conversationInitPageSize = 30;
 
     /**
      * @var int Defines the amount of messages loaded when loading more messages
      */
-    public $conversationUpdatePageSize = 50;
+    public $conversationUpdatePageSize = 30;
 
     /**
      * @return static
