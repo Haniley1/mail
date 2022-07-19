@@ -629,7 +629,9 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         const toMessageId = this.getListNode().find(`${selector.entry}:nth-last-child(4)`).data('entry-id');
         this.scrollToMessage(toMessageId, 1000, 'bottom');
         return this.loadMore('last').then(() => {
-            this.scrollToBottom();
+            const lastMessageId = this.getListNode().find(`${selector.entry}:last`).data('entry-id');
+            return this.scrollToMessage(lastMessageId);
+            // this.scrollToBottom();
         });
     };
 
