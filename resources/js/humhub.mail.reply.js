@@ -29,7 +29,6 @@ humhub.module('mail.reply', function(module, require, $) {
     MailReplyButton.prototype.init = function() {
         this.api = PMApi;
         this.editor = this._getEditor();
-        this.domParser = this.api.model.DOMParser.fromSchema(this.editor.view.state.schema);
     };
 
     MailReplyButton.prototype.handle = function() {
@@ -62,13 +61,10 @@ humhub.module('mail.reply', function(module, require, $) {
         this.initDetachButton();
     };
 
-    MailReply.prototype.scrollToOriginalMessage = function () {
-    };
-
     MailReply.prototype.attachReply = function (messageId) {
         const $messageContainer = this.getMessageContainer(messageId);
         if (!$messageContainer.length) {
-            module.log('Message container not found', messageId);
+            module.log.error('Message container not found', messageId);
             return;
         }
 
@@ -285,10 +281,21 @@ humhub.module('mail.reply', function(module, require, $) {
         return module.text('reply') || 'Reply';
     };
 
+    const scrollToOriginalMessage = function (data) {
+        const messageId = data.params.messageId;
+        const conversationViewWidget = Widget.instance(selector.messagesRoot);
+        conversationViewWidget.scrollLock = true;
+        conversationViewWidget.scrollToMessage(messageId).then(() => {
+            conversationViewWidget.scrollLock = false;
+            conversationViewWidget.highlightMessage(messageId);
+        });
+    };
+
     module.export({
         initOnPjaxLoad: true,
         init: init,
         initReplyButton: initReplyButton,
+        scrollToOriginalMessage: scrollToOriginalMessage,
         MailReply: MailReply,
         MailReplyButton: MailReplyButton
     });
