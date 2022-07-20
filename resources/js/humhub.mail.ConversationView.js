@@ -510,7 +510,6 @@ humhub.module('mail.ConversationView', function (module, require, $) {
     };
 
     ConversationView.prototype.scrollToMessage = function (messageId, scrollTime = 400, position = 'middle') {
-        console.log('scrollToMessage', messageId);
         const getInnerOffset = function (containerHeight, $element, position) {
             if (position === 'top') {
                 return -33;
@@ -551,7 +550,6 @@ humhub.module('mail.ConversationView', function (module, require, $) {
 
         const $messageContainer = this.getMessageContainer(messageId);
         if (!$messageContainer.length) {
-            console.log('message not found, try to load', messageId);
             const toMessageId = this.getListNode().find(`${selector.entry}:nth(15)`).data('entry-id');
             this.scrollToMessage(toMessageId, 1000, 'top');
             return this.loadAroundEntries(this.getActiveMessageId(), messageId)
