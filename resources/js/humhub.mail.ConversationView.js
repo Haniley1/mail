@@ -554,12 +554,8 @@ humhub.module('mail.ConversationView', function (module, require, $) {
             console.log('message not found, try to load', messageId);
             const toMessageId = this.getListNode().find(`${selector.entry}:nth(15)`).data('entry-id');
             this.scrollToMessage(toMessageId, 1000, 'top');
-            this.scrollLock = true;
             return this.loadAroundEntries(this.getActiveMessageId(), messageId)
-              .then(() => this.scrollToMessage(messageId))
-              .then(() => {
-                  this.scrollLock = false;
-              });
+              .then(() => this.scrollToMessage(messageId));
         }
 
         if (view.isSmall() || view.isMedium()) {
@@ -633,10 +629,14 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         }
 
         const toMessageId = this.getListNode().find(`${selector.entry}:nth-last-child(4)`).data('entry-id');
+        this.scrollLock = true;
         this.scrollToMessage(toMessageId, 1000, 'bottom');
         return this.loadMore('last').then(() => {
             const lastMessageId = this.getListNode().find(`${selector.entry}:last`).data('entry-id');
-            return this.scrollToMessage(lastMessageId);
+            return this.scrollToMessage(lastMessageId)
+              .then(() => {
+                  this.scrollLock = false;
+              });
             // this.scrollToBottom();
         });
     };

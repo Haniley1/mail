@@ -284,7 +284,9 @@ humhub.module('mail.reply', function(module, require, $) {
     const scrollToOriginalMessage = function (data) {
         const messageId = data.params.messageId;
         const conversationViewWidget = Widget.instance(selector.messagesRoot);
+        conversationViewWidget.scrollLock = true;
         conversationViewWidget.scrollToMessage(messageId).then(() => {
+            conversationViewWidget.scrollLock = false;
             conversationViewWidget.highlightMessage(messageId);
         });
     };
