@@ -625,7 +625,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
         e.preventDefault();
         if (!this.options.hasAfter) {
             const lastMessageId = this.$.find('.mail-conversation-entry:last').data('entryId');
-            return this.scrollToMessage(lastMessageId, 400, 'bottom');
+            return this.scrollToMessage(lastMessageId);
         }
 
         const toMessageId = this.getListNode().find(`${selector.entry}:nth-last-child(4)`).data('entry-id');
