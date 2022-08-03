@@ -134,4 +134,31 @@ class MessageEntry extends ActiveRecord
     {
         return $this->created_by == Yii::$app->user->id;
     }
+
+    public function getReactions(): ActiveQuery
+    {
+        return $this->hasMany(MessageEntryReaction::class, ['message_entry_id' => 'id']);
+    }
+
+    public function getReactionsArray(): array
+    {
+        /** @var MessageEntryReaction[] $reactions */
+        $reactions = $this->getReactions()->groupBy(['type'])->all();
+        return array_map(function ($item) {
+            return $item->type;
+        }, $reactions);
+    }
+
+    public function getData(): array
+    {
+        return [
+            'id' => $this->id,
+            'message_id' => $this->message_id,
+            'user_id' => $this->user_id,
+            'content' => $this->content,
+            'message_entry_id' => $this->message_entry_id,
+            'reactions' => $this->getReactionsArray(),
+            'created_at' => $this->created_at
+        ];
+    }
 }

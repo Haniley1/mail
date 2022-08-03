@@ -5,7 +5,7 @@ namespace humhub\modules\mail\controllers;
 use humhub\components\access\ControllerAccess;
 use humhub\modules\mail\models\forms\EditTitle;
 use humhub\modules\mail\models\forms\UserFilter as MailUserFilter;
-use humhub\modules\mail\Module;
+use humhub\modules\mail\models\MessageEntryReaction;
 use humhub\modules\mail\widgets\ChatUserList;
 use humhub\modules\mail\widgets\ConversationHeader;
 use humhub\modules\mail\widgets\Messages;
@@ -596,5 +596,55 @@ class MailController extends Controller
         }
 
         return $from ? 'old' : 'new';
+    }
+
+    public function actionReaction($messageEntryId, $type): Response
+    {
+        $userId = Yii::$app->user->identity->id;
+        if (!MessageEntryReaction::canAddReaction($userId, (int) $messageEntryId)) {
+            return $this->asJson([
+                'result' => false,
+                'error' => "You can't add reaction to the message"
+            ]);
+        }
+
+        if (MessageEntryReaction::hasReaction($userId, (int) $messageEntryId, $type)) {
+            return $this->deleteReaction($userId, $messageEntryId, $type);
+        }
+
+        return $this->addReaction($userId, $messageEntryId, $type);
+    }
+
+    private function deleteReaction($userId, $messageEntryId, $type): Response
+    {
+        $reaction = MessageEntryReaction::findOne([
+            'user_id' => $userId,
+            'message_entry_id' => $messageEntryId,
+            'type' => $type
+        ]);
+
+        if (!$reaction->delete()) {
+            return $this->asJson([
+                'result' => false,
+                'error' => "Can't remove reaction. Try again later"
+            ]);
+        }
+
+        $messageEntry = MessageEntry::findOne(['id' => $messageEntryId]);
+        return $this->asJson(['result' => true, 'data' => ['MessageEntry' => $messageEntry->getData()]]);
+    }
+
+    private function addReaction(int $userId, int $messageEntryId, string $type): Response
+    {
+        $reaction = MessageEntryReaction::create($userId, $messageEntryId, $type);
+        if (!$reaction->validate() || !$reaction->save()) {
+            return $this->asJson([
+                'result' => false,
+                'error' => $reaction->getErrorMessage()
+            ]);
+        }
+
+        $messageEntry = MessageEntry::findOne(['id' => $messageEntryId]);
+        return $this->asJson(['result' => true, 'data' => ['MessageEntry' => $messageEntry->getData()]]);
     }
 }
