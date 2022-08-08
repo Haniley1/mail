@@ -235,7 +235,6 @@ humhub.module('mail.reply', function(module, require, $) {
     };
 
     var initReplyButton = function(mutations = []) {
-        if (mutations.length <= 2) return false;
         ($messagesRoot || $(selector.messagesRoot)).find(selector.convEntryContent).each(function(idx, el) {
             var $el = $(el);
             const isBlocked = !!$el.closest('.mail-conversation-entry').find('.profile-disable').length;

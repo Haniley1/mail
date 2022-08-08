@@ -29,6 +29,7 @@ module.exports = function (grunt) {
                     'resources/js/humhub.mail.mobile.js',
                     'resources/js/humhub.mail.filter.unread.js',
                     'resources/js/humhub.mail.userList.js',
+                    'resources/js/humhub.mail.ConversationEntry.reaction.js',
                 ],
                 dest: 'resources/js/humhub.mail.messenger.bundle.js'
             },
