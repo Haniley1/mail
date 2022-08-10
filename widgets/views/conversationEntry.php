@@ -1,13 +1,12 @@
 <?php
 
-use humhub\modules\mail\helpers\Url;
 use humhub\modules\mail\models\MessageEntry;
+use humhub\modules\mail\widgets\ConversationEntryReactions;
 use humhub\modules\mail\widgets\SentOrSeen;
 use humhub\modules\ui\view\components\View;
 use humhub\modules\user\widgets\Image;
 use humhub\widgets\ModalButton;
 use humhub\modules\content\widgets\richtext\RichText;
-use humhub\modules\mail\widgets\TimeAgo;
 use humhub\libs\Html;
 use humhub\modules\rocketcore\widgets\UserOccupation;
 
@@ -65,11 +64,8 @@ $reply = $entry->getReply()->one();
                                 <?php endif; ?>
                                 <?= RichText::output($entry->content) ?>
                             </div>
-                            <div class="message-reaction">
-                                <span class="reaction-1">❤️</span>
-                                <span class="reaction-2">🔥</span>
-                                <span class="reaction-3">👍</span>
-                                <span class="reaction-4">😢</span>
+                            <div class="message-reactions">
+                                <?= ConversationEntryReactions::widget(['entry' => $entry]); ?>
                             </div>
                         </div>
                         <div class="col-xs-shrink space-in-h-zero-xs">
@@ -119,11 +115,8 @@ $reply = $entry->getReply()->one();
                                 <?php endif; ?>
                                 <?= RichText::output($entry->content) ?>
                             </div>
-                            <div class="message-reaction">
-                                <span class="reaction-1">❤️</span>
-                                <span class="reaction-2">🔥</span>
-                                <span class="reaction-3">👍</span>
-                                <span class="reaction-4">😢</span>
+                            <div class="message-reactions">
+                                <?= ConversationEntryReactions::widget(['entry' => $entry]); ?>
                             </div>
                         </div>
                     </div>

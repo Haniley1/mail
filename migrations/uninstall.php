@@ -12,6 +12,7 @@ class uninstall extends Migration
         $this->safeDropTable('user_message');
         $this->safeDropTable('message');
         $this->safeDropTable('message_entry');
+        $this->safeDropTable('message_entry_reaction');
     }
 
     public function down()
