@@ -3,16 +3,23 @@ humhub.module('mail.reply', function(module, require, $) {
         messagesRoot: '#mail-conversation-root',
         replyButton: '.rocketmailreply-btn',
         convEntry: '.mail-conversation-entry',
-        convEntryContent: '.mail-conversation-entry .content',
+        convEntryContent: '.mail-conversation-entry .content .message-frame .dropdown .dropdown-menu',
         convEntriesList: '.conversation-entry-list',
         mailAddonRoot: '.rocketcore-mail-addon-container',
         mailAddonRootEntry: '.rocketcore-mail-addon-entry',
         replyBtn: '.rocketmailreply-btn',
         editor: '.ProsemirrorEditor',
         messageDom: '[data-ui-richtext]',
+        avatar: '.avatar img',
+        reply: '.reply-container',
+        replyAuthor: '.reply-author',
+        replyText: '.reply-text',
+        replyId: '#replyform-replyid',
+        replyDetachButton: '#reply-detach',
     };
 
-    var REPLY_MAX_LENGTH = 256;
+    var REPLY_MAX_LENGTH = 40;
+    const EVENT_REPLY_CHANGED = 'mail:reply:changed';
 
     var Widget = require('ui.widget').Widget;
     var RichText = require('ui.richtext');
@@ -22,40 +29,13 @@ humhub.module('mail.reply', function(module, require, $) {
     MailReplyButton.prototype.init = function() {
         this.api = PMApi;
         this.editor = this._getEditor();
-        this.domParser = this.api.model.DOMParser.fromSchema(this.editor.view.state.schema);
     };
 
     MailReplyButton.prototype.handle = function() {
-        this.clearEditor();
-        this.pasteEditor(this.getReplyCut());
-        this.fixEmptyBlock();
+        const messageReply = Widget.instance(selector.reply);
+        const messageId = this.getMessageId();
+        messageReply.attachReply(messageId);
         this.focusEditor();
-    };
-
-    MailReplyButton.prototype.pasteEditor = function(content, pos = 1) {
-        var $tr = this.editor.view.state.tr.insert(pos, content);
-        this.editor.view.dispatch($tr);
-    }
-
-    MailReplyButton.prototype.fixEmptyBlock = function() {
-        var view = this.editor.view;
-        var doc = view.state.doc;
-        view.dispatch(
-            view.state.tr.setSelection(
-                this.api.state.TextSelection.near(doc.resolve(doc.content.size - 4))
-            )
-        );
-        this.api.commands.joinBackward(view.state, view.dispatch, view);
-        // this.api.commands.liftEmptyBlock(view.state, view.dispatch);
-    };
-
-    MailReplyButton.prototype.clearEditor = function() {
-        this.editor.clear();
-        var $tr = this.editor.view.state.tr.insert(
-            0,
-            this.editor.parser.parse('>')
-        );
-        this.editor.view.dispatch($tr);
     };
 
     MailReplyButton.prototype.focusEditor = function() {
@@ -65,45 +45,150 @@ humhub.module('mail.reply', function(module, require, $) {
         this.editor.view.dispatch($tr.scrollIntoView());
     };
 
-    MailReplyButton.prototype.getNodesContent = function() {
-        return this.domParser.parse(this._getDomNode());
+    MailReplyButton.prototype._getEditor = function() {
+        return Widget.instance($(selector.messagesRoot).find(selector.editor)).editor;
     };
 
-    MailReplyButton.prototype.getReplyCut = function() {
-        var node = this.stripBlockquoteFromBeginning(this.getNodesContent());
-        if (node.nodeSize < REPLY_MAX_LENGTH) {
-            return node;
+    MailReplyButton.prototype.getMessageId = function () {
+        return this.$.closest(selector.convEntry).data('entry-id');
+    };
+
+    var MailReply = Widget.extend();
+    MailReply.prototype.init = function () {
+        this.api = PMApi;
+        this.editor = Widget.instance($(selector.editor)).editor;
+        this.domParser = this.api.model.DOMParser.fromSchema(this.editor.view.state.schema);
+        this.initDetachButton();
+    };
+
+    MailReply.prototype.attachReply = function (messageId) {
+        const $messageContainer = this.getMessageContainer(messageId);
+        if (!$messageContainer.length) {
+            module.log.error('Message container not found', messageId);
+            return;
         }
-        var nodeCut = node.cut(0, REPLY_MAX_LENGTH);
-        var schema = this.editor.view.state.schema;
-        var ellipsisNode = schema.node('paragraph', null, [schema.text('...')]);
-        return nodeCut.content.addToEnd(ellipsisNode);
+
+        const messageInfo = this.getMessageInfo($messageContainer);
+        this.setReplyAuthor(messageInfo.author);
+        this.setReplyText(messageInfo.text);
+        this.setReplyId(messageInfo.id);
+        this.showReply();
+        $(document).trigger(EVENT_REPLY_CHANGED, [messageInfo.id, messageInfo.author, messageInfo.text]);
     };
 
-    MailReplyButton.prototype.stripBlockquoteFromBeginning = function(node) {
+    MailReply.prototype.detachReply = function () {
+        const replyId = this.getReplyId();
+        this.setReplyAuthor('');
+        this.setReplyText('');
+        this.setReplyId('');
+        this.hideReply();
+        $(document).trigger(EVENT_REPLY_CHANGED, [replyId, '', '']);
+    }
+
+    MailReply.prototype.getMessageId = function ($messageContainer) {
+        return $messageContainer.data('entry-id');
+    };
+
+    MailReply.prototype.getMessageAuthor = function ($messageContainer) {
+        return $messageContainer.find(selector.avatar).data('original-title');
+    };
+
+    MailReply.prototype.getMessageInfo = function ($messageContainer) {
+        const id = this.getMessageId($messageContainer);
+        const author = this.getMessageAuthor($messageContainer);
+        const text = this.getMessageTextCut($messageContainer);
+
+        return {id, author, text};
+    };
+
+    MailReply.prototype._getDomNode = function($messageContainer) {
+        return $messageContainer.find(selector.messageDom)[0];
+    };
+
+    MailReply.prototype.getNodesContent = function($messageContainer) {
+        return this.domParser.parse(this._getDomNode($messageContainer));
+    };
+
+    MailReply.prototype.stripBlockquoteFromBeginning = function(node) {
         if (node.content.size && node.content.content[0].type.name === 'blockquote') {
             return node.cut(node.content.content[0].nodeSize);
         }
         return node;
     };
 
-    MailReplyButton.prototype._getEditor = function() {
-        return Widget.instance($(selector.messagesRoot).find(selector.editor)).editor;
+    MailReply.prototype.getMessageText = function ($messageContainer) {
+        const node = this.stripBlockquoteFromBeginning(this.getNodesContent($messageContainer));
+        let result = '';
+        for (let i = 0; i < node.content.childCount; i++) {
+            if (node.content.content[i].isTextblock) {
+                const textContent = node.content.content[i].textContent;
+                if (!textContent.length) {
+                    continue;
+                }
+                result += result !== '' ? ' ' : '';
+                result += node.content.content[i].textContent;
+            }
+        }
+
+        return result;
     };
 
-    MailReplyButton.prototype._getDomNode = function() {
-        return this.$.closest(selector.convEntryContent).find(selector.messageDom)[0];
+    MailReply.prototype.getMessageTextCut = function ($messageContainer) {
+        const text = this.getMessageText($messageContainer);
+        if (text.length <= REPLY_MAX_LENGTH) {
+            return text;
+        }
+
+        return text.slice(0, REPLY_MAX_LENGTH) + '...';
     };
 
-    var MailReply = Widget.extend();
-    MailReply.prototype.init = function () {
-        this.originalMessageId = this._findOriginalMessageId();
+    MailReply.prototype.getMessageContainer = function (messageId) {
+        return $(`${selector.convEntry}[data-entry-id="${messageId}"]`);
     };
 
-    MailReply.prototype.scrollToOriginalMessage = function () {
+    MailReply.prototype.getReplyAuthor = function () {
+        return $(selector.replyAuthor).text();
     };
 
-    MailReply.prototype._findOriginalMessageId = function () {
+    MailReply.prototype.getReplyText = function () {
+        return $(selector.replyText).text();
+    };
+
+    MailReply.prototype.getReplyId = function () {
+        return $(selector.replyId).val();
+    };
+
+    MailReply.prototype.setReplyAuthor = function (author) {
+        $(selector.replyAuthor).text(author);
+    };
+
+    MailReply.prototype.setReplyText = function (text) {
+        $(selector.replyText).text(text);
+    };
+
+    MailReply.prototype.setReplyId = function (id) {
+        $(selector.replyId).val(id);
+    };
+
+    MailReply.prototype.showReply = function () {
+        $(selector.reply).css('display', 'flex');
+    };
+
+    MailReply.prototype.hideReply = function () {
+        $(selector.reply).css('display', 'none');
+    };
+
+    MailReply.prototype.initDetachButton = function () {
+        $(selector.replyDetachButton).click((e) => {
+            e.preventDefault();
+            this.detachReply();
+            this.focusEditor();
+        });
+    };
+
+    MailReply.prototype.focusEditor = function () {
+        const editor = Widget.instance($(selector.editor));
+        editor.focus();
     };
 
     var PMApi;
@@ -150,7 +235,6 @@ humhub.module('mail.reply', function(module, require, $) {
     };
 
     var initReplyButton = function(mutations = []) {
-        if (mutations.length <= 2) return false;
         ($messagesRoot || $(selector.messagesRoot)).find(selector.convEntryContent).each(function(idx, el) {
             var $el = $(el);
             const isBlocked = !!$el.closest('.mail-conversation-entry').find('.profile-disable').length;
@@ -196,11 +280,22 @@ humhub.module('mail.reply', function(module, require, $) {
         return module.text('reply') || 'Reply';
     };
 
+    const scrollToOriginalMessage = function (data) {
+        const messageId = data.params.messageId;
+        const conversationViewWidget = Widget.instance(selector.messagesRoot);
+        conversationViewWidget.scrollLock = true;
+        conversationViewWidget.scrollToMessage(messageId).then(() => {
+            conversationViewWidget.scrollLock = false;
+            conversationViewWidget.highlightMessage(messageId);
+        });
+    };
+
     module.export({
         initOnPjaxLoad: true,
         init: init,
         initReplyButton: initReplyButton,
+        scrollToOriginalMessage: scrollToOriginalMessage,
         MailReply: MailReply,
-        MailReplyButton: MailReplyButton,
+        MailReplyButton: MailReplyButton
     });
 });
