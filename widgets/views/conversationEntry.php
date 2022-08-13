@@ -42,45 +42,51 @@ $reply = $entry->getReply()->one();
             </div>
             <div class="col-xs space-in-h-zero-xs">
                 <div class="content">
-                    <div class="message-frame row row-end-xs row-bottom-xs space-out-h-zero-xs">
-                        <div class="col-xs space-in-h-zero-xs">
-                            <?php if ($usersCount > 2) :?>
-                                <div class="head col-xs-12 hidden-from-mobile space-in-h-zero-xs">
-                                    <p<?php if($userDisabled) : ?> class="profile-disable"<?php endif;?>><a href="<?= $entry->user->getUrl()?>"><?= Html::encode($entry->user->displayName);?></a></p>
-                                </div>
-                            <?php endif;?>
-                            <div class="message col-xs-shrink space-in-h-zero-xs <?= $contentClass ?> ">
+                    <div class="message-frame">
+                        <div class="row row-end-xs row-bottom-xs space-out-h-zero-xs">
+                            <div class="col-xs space-in-h-zero-xs">
                                 <?php if ($usersCount > 2) :?>
-                                    <div class="head hidden-from-desktop">
-                                        <p<?php if($userDisabled) : ?> class="profile-disable"<?php endif;?>><a href="<?= $entry->user->getUrl()?>"><?= Html::encode($entry->user->displayName); ?></a></p>
+                                    <div class="col-xs-12 hidden-from-mobile space-in-h-zero-xs">
+                                        <div class="head">
+                                            <p<?php if($userDisabled) : ?> class="profile-disable"<?php endif;?>><a href="<?= $entry->user->getUrl()?>"><?= Html::encode($entry->user->displayName);?></a></p>
+                                        </div>
                                     </div>
                                 <?php endif;?>
-                                <?php if ($reply) : ?>
-                                    <a href="#" data-action-click="mail.reply.scrollToOriginalMessage" data-action-params='{"messageId":<?= $reply->id ?>}'>
-                                        <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
-                                            <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
-                                        </blockquote>
-                                    </a>
-                                <?php endif; ?>
-                                <?= RichText::output($entry->content) ?>
+                                <div class="col-xs-shrink space-in-h-zero-xs">
+                                    <div class="message <?= $contentClass ?> ">
+                                        <?php if ($usersCount > 2) :?>
+                                            <div class="head hidden-from-desktop">
+                                                <p<?php if($userDisabled) : ?> class="profile-disable"<?php endif;?>><a href="<?= $entry->user->getUrl()?>"><?= Html::encode($entry->user->displayName); ?></a></p>
+                                            </div>
+                                        <?php endif;?>
+                                        <?php if ($reply) : ?>
+                                            <a href="#" data-action-click="mail.reply.scrollToOriginalMessage" data-action-params='{"messageId":<?= $reply->id ?>}'>
+                                                <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
+                                                    <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
+                                                </blockquote>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?= RichText::output($entry->content) ?>
+                                    </div>
+                                    <div class="message-reactions">
+                                        <?= ConversationEntryReactions::widget(['entry' => $entry]); ?>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="message-reactions">
-                                <?= ConversationEntryReactions::widget(['entry' => $entry]); ?>
+                            <div class="col-xs-shrink space-in-h-zero-xs">
+                                <div class="dropdown">
+                                    <div id="conversationSettingsButton" class="dropdown-btn" data-toggle="dropdown" aria-expanded="false">
+                                        <span>&middot;</span><span>&middot;</span><span>&middot;</span>
+                                    </div>
+                                    <ul class="dropdown-menu dropdown-left conversation-menu" aria-labelledby="conversationSettingsButton">
+                                        <?= $this->render('_conversationEntryMenu', ['entry' => $entry, 'badge' => false]) ?>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-xs-shrink space-in-h-zero-xs">
-                            <div class="dropdown">
-                                <button type="button" id="conversationSettingsButton" class="dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <svg width="3" height="17" viewBox="0 0 3 17" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_45_11805)"><circle cx="1.5" cy="14.5" r="1.5" transform="rotate(-90 1.5 14.5)" fill="#C1C1C1"/><circle cx="1.5" cy="8.5" r="1.5" transform="rotate(-90 1.5 8.5)" fill="#C1C1C1"/><circle cx="1.5" cy="2.5" r="1.5" transform="rotate(-90 1.5 2.5)" fill="#C1C1C1"/></g><defs><clipPath id="clip0_45_11805"><rect width="17" height="3" fill="white" transform="translate(0 17) rotate(-90)"/></clipPath></defs></svg>
-                                </button>
-                                <ul class="dropdown-menu dropdown-left conversation-menu" aria-labelledby="conversationSettingsButton">
-                                    <?= $this->render('_conversationEntryMenu', ['entry' => $entry, 'badge' => false]) ?>
-                                </ul>
-                            </div>
+                        <div class="foot col-xs-12 col-last-xs space-in-h-zero-xs">
+                            <?= $this->render('_conversationEntryTime', ['entry' => $entry, 'badge' => false]) ?>
                         </div>
-                    </div>
-                    <div class="foot col-xs-12 col-last-xs space-in-h-zero-xs">
-                        <?= $this->render('_conversationEntryTime', ['entry' => $entry, 'badge' => false]) ?>
                     </div>
                 </div>
             </div>
@@ -93,36 +99,38 @@ $reply = $entry->getReply()->one();
         <div class="row row-top-xs space-out-h-zero-xs">
             <div class="col-xs space-in-h-zero-xs">
                 <div class="content">
-                    <div class="message-frame row row-end-xs row-bottom-xs space-out-h-zero-xs">
-                        <div class="col-xs-shrink space-in-h-zero-xs">
-                            <div class="dropdown">
-                                <button type="button" id="conversationSettingsButton" class="dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <svg width="3" height="17" viewBox="0 0 3 17" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_45_11805)"><circle cx="1.5" cy="14.5" r="1.5" transform="rotate(-90 1.5 14.5)" fill="#C1C1C1"/><circle cx="1.5" cy="8.5" r="1.5" transform="rotate(-90 1.5 8.5)" fill="#C1C1C1"/><circle cx="1.5" cy="2.5" r="1.5" transform="rotate(-90 1.5 2.5)" fill="#C1C1C1"/></g><defs><clipPath id="clip0_45_11805"><rect width="17" height="3" fill="white" transform="translate(0 17) rotate(-90)"/></clipPath></defs></svg>
-                                </button>
-                                <ul class="dropdown-menu dropdown-right conversation-menu" aria-labelledby="conversationSettingsButton">
-                                    <?= $this->render('_conversationEntryMenu', ['entry' => $entry, 'badge' => false]) ?>
-                                </ul>
+                    <div class="message-frame">
+                        <div class="row row-end-xs row-bottom-xs space-out-h-zero-xs">
+                            <div class="col-xs-shrink space-in-h-zero-xs">
+                                <div class="dropdown">
+                                    <div id="conversationSettingsButton" class="dropdown-btn" data-toggle="dropdown" aria-expanded="false">
+                                        <span>&middot;</span><span>&middot;</span><span>&middot;</span>
+                                    </div>
+                                    <ul class="dropdown-menu dropdown-right conversation-menu" aria-labelledby="conversationSettingsButton">
+                                        <?= $this->render('_conversationEntryMenu', ['entry' => $entry, 'badge' => false]) ?>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-xs space-in-h-zero-xs">
+                                <div class="message <?= $contentClass ?>">
+                                    <?php if ($reply) : ?>
+                                        <a href="#" data-action-click="mail.reply.scrollToOriginalMessage" data-action-params='{"messageId":<?= $reply->id ?>}'>
+                                            <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
+                                                <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
+                                            </blockquote>
+                                        </a>
+                                    <?php endif; ?>
+                                    <?= RichText::output($entry->content) ?>
+                                </div>
+                                <div class="message-reactions">
+                                    <?= ConversationEntryReactions::widget(['entry' => $entry]); ?>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-xs space-in-h-zero-xs">
-                            <div class="message <?= $contentClass ?>">
-                                <?php if ($reply) : ?>
-                                    <a href="#" data-action-click="mail.reply.scrollToOriginalMessage" data-action-params='{"messageId":<?= $reply->id ?>}'>
-                                        <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
-                                            <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
-                                        </blockquote>
-                                    </a>
-                                <?php endif; ?>
-                                <?= RichText::output($entry->content) ?>
-                            </div>
-                            <div class="message-reactions">
-                                <?= ConversationEntryReactions::widget(['entry' => $entry]); ?>
-                            </div>
+                        <div class="foot">
+                            <?= $this->render('_conversationEntryTime', ['entry' => $entry, 'badge' => false]) ?>
+                            <?= SentOrSeen::widget(['entry' => $entry])?>
                         </div>
-                    </div>
-                    <div class="foot">
-                        <?= $this->render('_conversationEntryTime', ['entry' => $entry, 'badge' => false]) ?>
-                        <?= SentOrSeen::widget(['entry' => $entry])?>
                     </div>
                 </div>
             </div>
