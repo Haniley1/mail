@@ -14,7 +14,7 @@ $isOwnMessage = $entry->user->is(Yii::$app->user->getIdentity());
 $lastEntryId = $entry->message->lastEntry->id;
 
 ?>
-<?php if (count($entry->message->users) <= 2) : ?>
+<?php if (count($entry->message->users) <= 2 && !$isOwnMessage) : ?>
     <div class="message-reaction">
         <span class="reaction-1" data-action-click="mail.ConversationEntry.reaction.react" data-action-params='{"messageEntryId":"<?= $entry->id ?>","type":"heart"}'>❤️</span>
         <span class="reaction-2" data-action-click="mail.ConversationEntry.reaction.react" data-action-params='{"messageEntryId":"<?= $entry->id ?>","type":"flame"}'>🔥</span>
