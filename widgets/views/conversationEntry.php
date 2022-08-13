@@ -75,9 +75,9 @@ $reply = $entry->getReply()->one();
                             </div>
                             <div class="col-xs-shrink space-in-h-zero-xs">
                                 <div class="dropdown">
-                                    <button type="button" id="conversationSettingsButton" class="dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <svg width="3" height="17" viewBox="0 0 3 17" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_45_11805)"><circle cx="1.5" cy="14.5" r="1.5" transform="rotate(-90 1.5 14.5)" fill="#C1C1C1"/><circle cx="1.5" cy="8.5" r="1.5" transform="rotate(-90 1.5 8.5)" fill="#C1C1C1"/><circle cx="1.5" cy="2.5" r="1.5" transform="rotate(-90 1.5 2.5)" fill="#C1C1C1"/></g><defs><clipPath id="clip0_45_11805"><rect width="17" height="3" fill="white" transform="translate(0 17) rotate(-90)"/></clipPath></defs></svg>
-                                    </button>
+                                    <div id="conversationSettingsButton" class="dropdown-btn" data-toggle="dropdown" aria-expanded="false">
+                                        <span>&middot;</span><span>&middot;</span><span>&middot;</span>
+                                    </div>
                                     <ul class="dropdown-menu dropdown-left conversation-menu" aria-labelledby="conversationSettingsButton">
                                         <?= $this->render('_conversationEntryMenu', ['entry' => $entry, 'badge' => false]) ?>
                                     </ul>
@@ -103,9 +103,9 @@ $reply = $entry->getReply()->one();
                         <div class="row row-end-xs row-bottom-xs space-out-h-zero-xs">
                             <div class="col-xs-shrink space-in-h-zero-xs">
                                 <div class="dropdown">
-                                    <button type="button" id="conversationSettingsButton" class="dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <svg width="3" height="17" viewBox="0 0 3 17" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_45_11805)"><circle cx="1.5" cy="14.5" r="1.5" transform="rotate(-90 1.5 14.5)" fill="#C1C1C1"/><circle cx="1.5" cy="8.5" r="1.5" transform="rotate(-90 1.5 8.5)" fill="#C1C1C1"/><circle cx="1.5" cy="2.5" r="1.5" transform="rotate(-90 1.5 2.5)" fill="#C1C1C1"/></g><defs><clipPath id="clip0_45_11805"><rect width="17" height="3" fill="white" transform="translate(0 17) rotate(-90)"/></clipPath></defs></svg>
-                                    </button>
+                                    <div id="conversationSettingsButton" class="dropdown-btn" data-toggle="dropdown" aria-expanded="false">
+                                        <span>&middot;</span><span>&middot;</span><span>&middot;</span>
+                                    </div>
                                     <ul class="dropdown-menu dropdown-right conversation-menu" aria-labelledby="conversationSettingsButton">
                                         <?= $this->render('_conversationEntryMenu', ['entry' => $entry, 'badge' => false]) ?>
                                     </ul>
