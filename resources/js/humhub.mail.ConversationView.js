@@ -381,7 +381,7 @@ humhub.module('mail.ConversationView', function (module, require, $) {
     ConversationView.prototype.assureScroll = function (scrollToBottom) {
         var that = this;
         var $entryList = this.$.find('.conversation-entry-list');
-        if ($entryList[0].offsetHeight >= $entryList[0].scrollHeight && this.canLoadMore()) {
+        if ($entryList[0].offsetHeight > $entryList[0].scrollHeight && this.canLoadMore()) {
             return this.loadMore().then(function () {
                 return that.assureScroll();
             }).catch(function () {
