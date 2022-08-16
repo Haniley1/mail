@@ -5,6 +5,7 @@ use humhub\components\console\Application;
 use humhub\components\Widget;
 use humhub\modules\mail\Events;
 use humhub\modules\mail\widgets\ConversationSettingsMenu;
+use humhub\modules\mail\widgets\Messages;
 use humhub\modules\user\models\User;
 use humhub\widgets\TopMenu;
 use humhub\widgets\NotificationArea;
@@ -23,5 +24,6 @@ return [
         ['class' => 'humhub\modules\rest\Module', 'event' => 'restApiAddRules', 'callback' => ['humhub\modules\mail\Events', 'onRestApiAddRules']],
         ['class' => Application::class, 'event' => Application::EVENT_BEFORE_ACTION, 'callback' => ['humhub\modules\mail\Events', 'onBeforeConsoleAction']],
         ['class' => ConversationSettingsMenu::class, 'event' => Widget::EVENT_CREATE, 'callback' => [Events::class, 'onConversationSettingsMenu']],
+        ['class' => Messages::class, 'event' => Widget::EVENT_CREATE, 'callback' => [Events::class, 'onMessagesInit']],
     ],
 ];

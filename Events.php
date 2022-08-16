@@ -8,6 +8,7 @@
 
 namespace humhub\modules\mail;
 
+use humhub\modules\mail\assets\MailMenuPositionAsset;
 use humhub\modules\mail\assets\MailUnseenAsset;
 use humhub\modules\mail\models\Message;
 use humhub\modules\mail\models\UserMessageTag;
@@ -238,6 +239,14 @@ class Events
         ]);
         Yii::$app->view->registerJs(<<< JS
             humhub.modules.mail.unseen.init();
+        JS);
+    }
+
+    public static function onMessagesInit(): void
+    {
+        Yii::$app->view->registerAssetBundle(MailMenuPositionAsset::class);
+        Yii::$app->view->registerJs(<<< JS
+            humhub.modules.mail.menuPosition.initialize();
         JS);
     }
 }
