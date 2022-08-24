@@ -1285,24 +1285,19 @@ humhub.module('mail.reply', function(module, require, $) {
     };
 
     var initReplyButton = function(mutations = []) {
-        console.log('add reply buttons');
         ($messagesRoot || $(selector.messagesRoot)).find(selector.convEntryContent).each(function(idx, el) {
             var $el = $(el);
-            console.log('add for message', $el);
             const isBlocked = !!$el.closest('.mail-conversation-entry').find('.profile-disable').length;
             if (isBlocked) {
-                console.log('profile disabled for message', $el);
                 return;
             }
             if ($el.find(selector.mailAddonRoot).length) {
-                console.log('already added for message', $el);
                 return;
             }
             var mailAddonRootEl = createMailAddonRoot();
             var replyButtonEl = createReplyBtn();
             mailAddonRootEl.appendChild(replyButtonEl);
             $el.append(mailAddonRootEl);
-            console.log('added for message', $el);
         });
     };
 
