@@ -1292,11 +1292,11 @@ humhub.module('mail.reply', function(module, require, $) {
             const isBlocked = !!$el.closest('.mail-conversation-entry').find('.profile-disable').length;
             if (isBlocked) {
                 console.log('profile disabled for message', $el);
-                return false;
+                return;
             }
             if ($el.find(selector.mailAddonRoot).length) {
                 console.log('already added for message', $el);
-                return true;
+                return;
             }
             var mailAddonRootEl = createMailAddonRoot();
             var replyButtonEl = createReplyBtn();
