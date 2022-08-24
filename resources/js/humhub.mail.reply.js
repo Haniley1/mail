@@ -239,9 +239,11 @@ humhub.module('mail.reply', function(module, require, $) {
             var $el = $(el);
             const isBlocked = !!$el.closest('.mail-conversation-entry').find('.profile-disable').length;
             if (isBlocked) {
-                return false;
+                return;
             }
-            if ($el.find(selector.mailAddonRoot).length) return true;
+            if ($el.find(selector.mailAddonRoot).length) {
+                return;
+            }
             var mailAddonRootEl = createMailAddonRoot();
             var replyButtonEl = createReplyBtn();
             mailAddonRootEl.appendChild(replyButtonEl);
