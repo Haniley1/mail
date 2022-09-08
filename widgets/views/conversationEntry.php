@@ -53,20 +53,25 @@ $reply = $entry->getReply()->one();
                                     </div>
                                 <?php endif;?>
                                 <div class="col-xs-shrink space-in-h-zero-xs">
-                                    <div class="message <?= $contentClass ?> ">
-                                        <?php if ($usersCount > 2) :?>
-                                            <div class="head hidden-from-desktop">
-                                                <p<?php if($userDisabled) : ?> class="profile-disable"<?php endif;?>><a href="<?= $entry->user->getUrl()?>"><?= Html::encode($entry->user->displayName); ?></a></p>
-                                            </div>
-                                        <?php endif;?>
-                                        <?php if ($reply) : ?>
-                                            <a href="#" data-action-click="mail.reply.scrollToOriginalMessage" data-action-params='{"messageId":<?= $reply->id ?>}'>
-                                                <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
-                                                    <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
-                                                </blockquote>
-                                            </a>
-                                        <?php endif; ?>
-                                        <?= RichText::output($entry->content) ?>
+                                    <div class="dropdown mobile">
+                                        <div class="message <?= $contentClass ?> " data-toggle="dropdown">
+                                            <?php if ($usersCount > 2) :?>
+                                                <div class="head hidden-from-desktop">
+                                                    <p<?php if($userDisabled) : ?> class="profile-disable"<?php endif;?>><a href="<?= $entry->user->getUrl()?>"><?= Html::encode($entry->user->displayName); ?></a></p>
+                                                </div>
+                                            <?php endif;?>
+                                            <?php if ($reply) : ?>
+                                                <a href="#" data-action-click="mail.reply.scrollToOriginalMessage" data-action-params='{"messageId":<?= $reply->id ?>}'>
+                                                    <blockquote class="message-reply-item" data-reply-id="<?= $reply->id ?>">
+                                                        <?= RichText::previewWithoutQuotes($reply->content, 40); ?>
+                                                    </blockquote>
+                                                </a>
+                                            <?php endif; ?>
+                                            <?= RichText::output($entry->content) ?>
+                                        </div>
+                                        <div class="dropdown-menu">
+                                            <?= $this->render('_conversationEntryMenu', ['entry' => $entry, 'badge' => false]) ?>
+                                        </div>
                                     </div>
                                     <div class="message-reactions">
                                         <?= ConversationEntryReactions::widget(['entry' => $entry]); ?>
