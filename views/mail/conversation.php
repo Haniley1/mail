@@ -39,8 +39,23 @@ $countUsers = count($message->users);
             <div class="media-list conversation-entry-list">
                 <?= Messages::widget(['message' => $message])?>
             </div>
+            <div class="to-end-button-container">
+                <a href="#" class="to-last-message"></a>
+            </div>
         </div>
         <div class="mail-editor">
+            <div class="reply-container" data-ui-widget="mail.reply.MailReply" data-ui-init="1">
+                <div class="reply">
+                    <div class="reply-decoration"></div>
+                    <div class="reply-info">
+                        <div class="reply-author"></div>
+                        <div class="reply-text"></div>
+                    </div>
+                    <div class="reply-detach">
+                        <a href="#" id="reply-detach"><svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.3955 8.09473L7.60352 12.8867" stroke="#B4B4B4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12.3976 12.8898L7.60156 8.09277" stroke="#B4B4B4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></path></svg></a>
+                    </div>
+                </div>
+            </div>
             <?php if ($message->isBlocked()) : ?>
                 <div class="alert alert-danger">
                     <?= Yii::t('MailModule.views_mail_show', 'You are not allowed to participate in this conversation. You have been blocked by: {userNames}.', [
@@ -49,6 +64,7 @@ $countUsers = count($message->users);
                 </div>
             <?php elseif ($countUsers === 2 && $hasDeactivated) : ?>
                 <?php $form = ActiveForm::begin(['enableClientValidation' => false]); ?>
+                    <?= $form->field($replyForm, 'replyId')->hiddenInput()->label(false) ?>
                     <div class="form-textarea">
                         <?= $form->field($replyForm, 'message')->widget(MailRichtextEditor::class, ['id' => 'reply-'.time(), 'disabled' => true])->label(false) ?>
                     </div>
@@ -58,6 +74,7 @@ $countUsers = count($message->users);
                 <?php ActiveForm::end(); ?>
             <?php else : ?>
                 <?php $form = ActiveForm::begin(['enableClientValidation' => false]); ?>
+                    <?= $form->field($replyForm, 'replyId')->hiddenInput()->label(false) ?>
                     <div class="form-textarea">
                         <?= $form->field($replyForm, 'message')->widget(MailRichtextEditor::class, ['id' => 'reply-'.time()])->label(false) ?>
                     </div>

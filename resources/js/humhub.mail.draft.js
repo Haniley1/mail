@@ -7,6 +7,11 @@ humhub.module('mail.draft', function(module, require, $) {
     };
 
     var EVENT_DRAFT_CHANGED = 'mail:draft:changed';
+    var EVENT_REPLY_CHANGED = 'mail:reply:changed';
+
+    const CONVERSATION_DRAFTS_KEY = 'mail:conversation:drafts';
+    const CONVERSATION_REPLY_KEY = 'mail:conversation:reply';
+
     var Widget = require('ui.widget').Widget;
     var url = require('util').url;
     var RichText = require('ui.richtext');
@@ -23,27 +28,27 @@ humhub.module('mail.draft', function(module, require, $) {
         };
     }
 
-    var DraftsStorage = function() {
-        this.key = 'mail:conversation:drafts';
+    const Storage = function(key) {
+        this.key = key;
         this.internalStorage = window.localStorage || window.sessionStorage;
         if (this.internalStorage.getItem(this.key) === null) {
             this._saveList({});
         }
     };
 
-    DraftsStorage.prototype.get = function(convId) {
+    Storage.prototype.get = function(convId) {
         var list = this._getList();
         return list[convId] || null;
     };
 
-    DraftsStorage.prototype.set = function(convId, draft) {
+    Storage.prototype.set = function(convId, draft) {
         var list = this._getList();
         $(document).trigger(EVENT_DRAFT_CHANGED, [convId, draft, list]);
         list[convId] = draft;
         this._saveList(list);
     };
 
-    DraftsStorage.prototype.unset = function(convId) {
+    Storage.prototype.unset = function(convId) {
         var list = this._getList();
         if (typeof list[convId] !== undefined) {
             delete list[convId];
@@ -51,11 +56,11 @@ humhub.module('mail.draft', function(module, require, $) {
         }
     };
 
-    DraftsStorage.prototype._getList = function() {
+    Storage.prototype._getList = function() {
         return JSON.parse(this.internalStorage.getItem(this.key));
     };
 
-    DraftsStorage.prototype._saveList = function(list) {
+    Storage.prototype._saveList = function(list) {
         this.internalStorage.setItem(this.key, JSON.stringify(list));
     };
 
@@ -98,6 +103,7 @@ humhub.module('mail.draft', function(module, require, $) {
         var view = editor.view;
         var convId = getSelectedConversationId();
         var draft = getConversationDraft(convId);
+        var replyId = getConversationReply(convId);
         if (draft && editor.isEmpty()) {
             var $tr = editor.view.state.tr.insert(
                 0,
@@ -107,19 +113,27 @@ humhub.module('mail.draft', function(module, require, $) {
             PMApi.commands.joinBackward(view.state, view.dispatch, view);
         }
 
+        if (replyId) {
+            setTimeout(function () {
+                Widget.instance('.reply-container').attachReply(replyId);
+            }, 500);
+        }
+
         editor.on('keyup mouseup', throttle(function () {
             var draft = editor.serializer.serialize(editor.view.state.doc);
-            storage.set(convId, draft);
+            draftStorage.set(convId, draft);
         }, 1000));
 
         editor.$.on('clear', function() {
-            storage.unset(convId);
+            draftStorage.unset(convId);
         });
     };
 
-    var storage;
+    var draftStorage;
+    var replyStorage;
     var mutationObserver;
     var draftsObserver;
+    var replyObserver;
     var PMApi;
     var initialized = false;
     var init = function() {
@@ -137,13 +151,26 @@ humhub.module('mail.draft', function(module, require, $) {
             mutationObserver = new MutationObserver(loadDraft)
         }
 
+        const convId = getSelectedConversationId();
         PMApi = RichText.prosemirror.api;
-        storage = new DraftsStorage();
+        draftStorage = new Storage(CONVERSATION_DRAFTS_KEY);
+        replyStorage = new Storage(CONVERSATION_REPLY_KEY);
         mutationObserver.observe($messagesRoot[0], { childList: true, subtree: true });
         draftsObserver = function(ev, convId) {
             module.log.debug("Draft #" + convId + " just changed");
         };
         $(document).on(EVENT_DRAFT_CHANGED, draftsObserver);
+
+        replyObserver = function (_ev, id, author, text) {
+            if (author === '' && text === '') {
+                replyStorage.unset(convId);
+                return;
+            }
+
+            replyStorage.set(convId, id);
+        };
+        $(document).on(EVENT_REPLY_CHANGED, replyObserver);
+
         initialized = true;
     };
 
@@ -154,16 +181,24 @@ humhub.module('mail.draft', function(module, require, $) {
         if (draftsObserver) {
             $(document).off(EVENT_DRAFT_CHANGED, draftsObserver);
         }
+        if (replyObserver) {
+            $(document).off(EVENT_REPLY_CHANGED, replyObserver);
+        }
         initialized = false;
     };
 
     var getConversationDraft = function (convId) {
-        return storage.get(convId);
+        return draftStorage.get(convId);
+    };
+
+    var getConversationReply = function (convId) {
+        return replyStorage.get(convId);
     };
 
     module.export({
         initOnPjaxLoad: true,
         init: init,
-        DraftsStorage: DraftsStorage,
+        DraftsStorage: draftStorage,
+        ReplyStorage: replyStorage
     });
 });

@@ -68,23 +68,26 @@ class Message extends ActiveRecord
     }
 
     /**
-     * @param int|null $from
+     * @param int|null $entryId
      * @return MessageEntry[]
      */
-    public function getEntryPage($from = null)
+    public function getEntryPage($entryId = null, $type = 'old')
     {
         $query = $this->getEntries();
         $query->addOrderBy(['created_at' => SORT_DESC]);
 
-        if ($from) {
-            $query->andWhere(['<', 'message_entry.id', $from]);
+        if ($entryId && $type === 'old') {
+            $query->andWhere(['<', 'message_entry.id', $entryId]);
+        } elseif ($entryId && $type === 'new') {
+            $query->addOrderBy(['created_at' => SORT_ASC]);
+            $query->andWhere(['>', 'message_entry.id', $entryId]);
         }
 
         $module = Module::getModuleInstance();
-        $limit = $from ? $module->conversationUpdatePageSize : $module->conversationInitPageSize;
+        $limit = $entryId ? $module->conversationUpdatePageSize : $module->conversationInitPageSize;
         $query->limit($limit);
 
-        return array_reverse($query->all());
+        return $type === 'new' ? $query->all() : array_reverse($query->all());
     }
 
     /**
@@ -447,5 +450,41 @@ class Message extends ActiveRecord
 
         return true;
 
+    }
+
+    public function getEntriesAroundEntry($entryId): array
+    {
+        /** @var MessageEntry $entry */
+        $entry = $this->getEntries()->andWhere(['id' => $entryId])->one();
+        if (!$entry) {
+            return [];
+        }
+
+        $module = Module::getModuleInstance();
+        $limit = floor($module->conversationUpdatePageSize / 2);
+
+        $entriesBefore = $this->getEntries()
+            ->addOrderBy(['created_at' => SORT_ASC])
+            ->andWhere(['<', 'message_entry.id', $entry->id])
+            ->limit($limit)
+            ->all();
+
+        $entriesAfter = $this->getEntries()
+            ->addOrderBy(['created_at' => SORT_ASC])
+            ->andWhere(['>', 'message_entry.id', $entry->id])
+            ->limit($limit)
+            ->all();
+
+        return [...$entriesBefore, $entry, ...$entriesAfter];
+    }
+
+    public function hasEntriesBefore($entryId): bool
+    {
+        return (bool) $this->getEntries()->andWhere(['<', 'message_entry.id', $entryId])->count();
+    }
+
+    public function hasEntriesAfter($entryId): bool
+    {
+        return (bool) $this->getEntries()->andWhere(['>', 'message_entry.id', $entryId])->count();
     }
 }

@@ -7,6 +7,7 @@ use humhub\modules\content\widgets\richtext\RichText;
 use humhub\modules\mail\live\UserMessageDeleted;
 use humhub\modules\user\models\User;
 use Yii;
+use yii\db\ActiveQuery;
 
 /**
  * This class represents a message within a conversation.
@@ -21,6 +22,7 @@ use Yii;
  * @property integer $created_by
  * @property string $updated_at
  * @property integer $updated_by
+ * @property integer $message_entry_id
  *
  * The followings are the available model relations:
  * @property Message $message
@@ -66,7 +68,7 @@ class MessageEntry extends ActiveRecord
         // will receive user inputs.
         return [
             [['message_id', 'user_id', 'content'], 'required'],
-            [['message_id', 'user_id', 'file_id', 'created_by', 'updated_by'], 'integer'],
+            [['message_id', 'user_id', 'file_id', 'created_by', 'updated_by', 'message_entry_id'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
         ];
     }
@@ -74,6 +76,11 @@ class MessageEntry extends ActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
+    }
+
+    public function getReply(): ActiveQuery
+    {
+        return $this->hasOne(self::class, ['id' => 'message_entry_id']);
     }
 
     public function getMessage()
@@ -126,5 +133,32 @@ class MessageEntry extends ActiveRecord
     public function canEdit()
     {
         return $this->created_by == Yii::$app->user->id;
+    }
+
+    public function getReactions(): ActiveQuery
+    {
+        return $this->hasMany(MessageEntryReaction::class, ['message_entry_id' => 'id']);
+    }
+
+    public function getReactionsArray(): array
+    {
+        /** @var MessageEntryReaction[] $reactions */
+        $reactions = $this->getReactions()->groupBy(['type'])->all();
+        return array_map(function ($item) {
+            return $item->type;
+        }, $reactions);
+    }
+
+    public function getData(): array
+    {
+        return [
+            'id' => $this->id,
+            'message_id' => $this->message_id,
+            'user_id' => $this->user_id,
+            'content' => $this->content,
+            'message_entry_id' => $this->message_entry_id,
+            'reactions' => $this->getReactionsArray(),
+            'created_at' => $this->created_at
+        ];
     }
 }
