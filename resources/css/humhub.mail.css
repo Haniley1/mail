@@ -54,3 +54,18 @@
         background-color: #f5f5f5;
     }
 }
+
+.has-new-reaction {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-left: 5px;
+}
+
+.has-new-reaction img {
+    width: 100%;
+    vertical-align: top;
+}
+
+.chat-count {
+    padding-top: 2px;
+}

@@ -143,7 +143,7 @@ class UserMessage extends ActiveRecord
             $userId = Yii::$app->user->id;
         }
 
-        if($this->message->lastEntry && ($this->message->lastEntry->user_id === $userId)) {
+        if ($this->message->lastEntry && ($this->message->lastEntry->user_id === $userId)) {
             return false;
         }
 
@@ -161,5 +161,18 @@ class UserMessage extends ActiveRecord
         }
 
         return $entry->created_at > $this->last_viewed;
+    }
+
+    public function hasNewReaction(int $userId = null): bool
+    {
+        if ($userId === null) {
+            $userId = Yii::$app->user->id;
+        }
+
+        return MessageEntryReaction::find()
+            ->where(['>', 'created_at', $this->last_viewed ?? 0])
+            ->andWhere(['message_id' => $this->message_id])
+            ->andWhere(['!=', 'user_id', $userId])
+            ->exists();
     }
 }

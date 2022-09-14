@@ -8,6 +8,7 @@ use humhub\modules\content\widgets\richtext\RichText;
 use humhub\modules\mail\Module;
 use humhub\modules\user\models\User;
 use Yii;
+use yii\db\ActiveQuery;
 use yii\helpers\Html;
 
 /**
@@ -486,5 +487,33 @@ class Message extends ActiveRecord
     public function hasEntriesAfter($entryId): bool
     {
         return (bool) $this->getEntries()->andWhere(['>', 'message_entry.id', $entryId])->count();
+    }
+
+    public function getReactions(): ActiveQuery
+    {
+        return $this->hasMany(MessageEntryReaction::class, ['message_id' => 'id']);
+    }
+
+    public function getLastReaction(): ?MessageEntryReaction
+    {
+        /** @var MessageEntryReaction $reaction */
+        $reaction = $this->getReactions()
+            ->orderBy(['created_at' => SORT_DESC])
+            ->limit(1)
+            ->one();
+
+        return $reaction;
+    }
+
+    public function getRealUpdatedAt()
+    {
+        $lastEntry = $this->getLastEntry();
+        $lastReaction = $this->getLastReaction();
+
+        if (!$lastReaction) {
+            return $lastEntry->created_at;
+        }
+
+        return max($lastReaction->created_at, $lastEntry->created_at);
     }
 }
