@@ -3,8 +3,11 @@ humhub.module('mail.menuPosition', function(module, require, $) {
         entriesList: '.conversation-entry-list',
         entryClassName: 'mail-conversation-entry',
         entry: '.mail-conversation-entry',
+        menuContainer: '.dropdown',
         menu: '.conversation-menu',
         messageContent: '.content .message-frame',
+        messageContainer: '.conversation-entry-content',
+        conversationSettingsButton: '#conversationSettingsButton'
     };
 
     const view = require('ui.view');
@@ -61,11 +64,31 @@ humhub.module('mail.menuPosition', function(module, require, $) {
             }
         }
 
+        const addMobileMenuHandler = function () {
+            if (view.isSmall()) {
+                const $messageContainer = $(selector.entry).find(selector.messageContainer)
+                $messageContainer.off('click', handleMessageClick).on('click', handleMessageClick)
+            }
+        }
+
+        const handleMessageClick = function ($evt) {
+            $evt.stopPropagation()
+            const $messageGenericContainer = $($evt.currentTarget.parentElement.parentElement)
+            let $dropdown = $messageGenericContainer.siblings().find(selector.menuContainer)
+
+            if (!$dropdown.length) {
+                $dropdown = $messageGenericContainer.find(selector.menuContainer)
+            }
+
+            $dropdown.children(selector.conversationSettingsButton).dropdown('toggle')
+        }
+
         const observer = new MutationObserver(handleMutations);
         observer.observe($messageContainer[0], {childList: true});
 
         window.addEventListener('resize', initAllMenu);
         initAllMenu();
+        addMobileMenuHandler()
     };
 
     module.export({
