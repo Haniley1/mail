@@ -130,7 +130,7 @@ use humhub\modules\user\models\User;
                                                                     <strong><?= $subHeadline ?>
                                                                     <br><br>
                                                                     <!-- START: USER MESSAGE -->
-                                                                        <!-- <div style="display:inline-block;background-color:<?= $this->theme->variable('background-color-secondary')?>;border-radius:4px;padding:15px;"> -->
+                                                                        <!-- <div style="display:inline-block;background-color:<?//= $this->theme->variable('background-color-secondary')?>;border-radius:4px;padding:15px;"> -->
                                                                             <?//= $content ?>
                                                                         <!-- </div> -->
                                                                     <!-- END: USER MESSAGE -->
