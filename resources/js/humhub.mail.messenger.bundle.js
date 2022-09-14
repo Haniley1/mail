@@ -870,9 +870,10 @@ humhub.module('mail.inbox', function (module, require, $) {
         this.$.find('.entry').removeClass('selected');
         var $selected = this.$.find('[data-message-preview="' + activeMessageId + '"]');
 
-        if($selected.length) {
+        if ($selected.length) {
             $selected.removeClass('unread').addClass('selected').find('.new-message-badge').hide();
             $selected.find('.chat-count').hide();
+            $selected.find('.has-new-reaction').hide();
         }
     };
 
