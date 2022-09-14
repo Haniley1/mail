@@ -30,6 +30,7 @@ if ($userCount == 2) {
 $lastEntry = $message->lastEntry;
 $users = $message->users;
 $isNew = $userMessage->isUnread();
+$hasNewReaction = $userMessage->hasNewReaction();
 
 if ($lastEntry) {
     if ($lastEntry->user instanceof \humhub\modules\user\models\User) {
@@ -41,11 +42,11 @@ if ($lastEntry) {
 ?>
 
 <?php if ($lastEntry) : ?>
-    <li data-message-preview="<?= $message->id ?>" class="messagePreviewEntry entry<?= $isNew ? ' unread' : ''?>" data-action-click="mail.notification.loadMessage" data-action-url="<?= Url::toMessenger($message)?>" data-message-id="<?= $message->id ?>">
+    <li data-message-preview="<?= $message->id ?>" class="messagePreviewEntry entry<?= $isNew || $hasNewReaction ? ' unread' : ''?>" data-action-click="mail.notification.loadMessage" data-action-url="<?= Url::toMessenger($message)?>" data-message-id="<?= $message->id ?>">
         <div class="mail-link">
             <div class="avatar<?php if (($userCount == 2) && $userDisabled) : ?> profile-disable<?php endif;?>">
                 <?= Image::widget(['user' => $participant, 'width' => '40', 'link' => false])?>
-                <?= Label::danger()->cssClass('new-message-badge')->style((!$isNew ? 'display:none' : '')) ?>
+                <?= Label::danger()->cssClass('new-message-badge')->style((!$isNew && !$hasNewReaction ? 'display:none' : '')) ?>
             </div>
 
             <div class="content">
@@ -74,6 +75,11 @@ if ($lastEntry) {
                         <p<?php if (($userCount == 2) && $userDisabled) : ?> class="profile-disable"<?php endif;?>><?= $lastEntry->user->is(Yii::$app->user->getIdentity()) ? Yii::t('MailModule.base', 'You') : Html::encode($lastEntry->user->profile->firstname) ?>: <?= MessagePreviewHelper::stripBlockquotes($message) ?></p>
                     </div>
                     <?= MessagesCounter::widget(['message' => $message])?>
+                    <?php if ($hasNewReaction) { ?>
+                        <div class="has-new-reaction">
+                            <img src="<?= Url::to('/themes/careerum-v2/images/thumbs-up.png'); ?>" alt="New reaction" />
+                        </div>
+                    <?php } ?>
                 </div>
             </div>
         </div>

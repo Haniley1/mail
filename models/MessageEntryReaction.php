@@ -13,6 +13,7 @@ use yii\db\ActiveQuery;
  * @property integer $user_id
  * @property string $type
  * @property string $created_at
+ * @property integer $message_id
  */
 class MessageEntryReaction extends ActiveRecord
 {
@@ -33,10 +34,13 @@ class MessageEntryReaction extends ActiveRecord
 
     public static function create(int $userId, int $messageEntryId, string $type): MessageEntryReaction
     {
+        $messageEntry = MessageEntry::findOne(['id' => $messageEntryId]);
+
         return new MessageEntryReaction([
             'user_id' => $userId,
             'message_entry_id' => $messageEntryId,
             'type' => $type,
+            'message_id' => $messageEntry->message_id,
         ]);
     }
 
@@ -63,7 +67,7 @@ class MessageEntryReaction extends ActiveRecord
             [['message_entry_id', 'user_id'], 'integer'],
             [['type'], 'string', 'max' => 20],
             ['type', 'in', 'range' => self::getReactionTypes()],
-            [['message_entry_id', 'user_id', 'type'], 'required'],
+            [['message_entry_id', 'user_id', 'type', 'message_id'], 'required'],
             [['created_at'], 'safe'],
         ];
     }
@@ -73,8 +77,36 @@ class MessageEntryReaction extends ActiveRecord
         return $this->hasOne(User::class, ['user_id' => 'id']);
     }
 
-    public function getMessageEntry(): ActiveQuery
+    public function getMessage(): ActiveQuery
     {
-        return $this->hasOne(MessageEntry::class, ['message_entry_id' => 'id']);
+        return $this->hasOne(Message::class, ['id' => 'message_id']);
+    }
+
+    public function save($runValidation = true, $attributeNames = null)
+    {
+        $saveResult = parent::save($runValidation, $attributeNames);
+        if (!$saveResult) {
+            return false;
+        }
+
+        /** @var Message $message */
+        $message = $this->getMessage()->one();
+        if ($message) {
+            $message->seen($this->user_id);
+            // force update update_at & updated_by fields
+            $message->save();
+        }
+
+
+        return true;
+    }
+
+    public function afterDelete()
+    {
+        parent::afterDelete();
+
+        /** @var Message $message */
+        $message = $this->getMessage()->one();
+        $message->updateAttributes(['updated_at' => $message->getRealUpdatedAt()]);
     }
 }
